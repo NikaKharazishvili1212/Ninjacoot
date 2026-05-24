@@ -17,7 +17,7 @@ public class Cam : MonoBehaviour
     {
         // Sets camera's initial pitch (up-down tilt) and positions it behind and above the Player
         transform.rotation = Quaternion.Euler(CameraPitch, transform.rotation.eulerAngles.y, 0);
-        transform.position = Player.transform.position - transform.forward * CameraZoom + Vector3.up * 2;
+        transform.position = Player.transform.position - transform.forward * CameraZoom + Vector3.up * CameraUpPosition;
     }
 
     void Update()
@@ -28,7 +28,7 @@ public class Cam : MonoBehaviour
     }
 
     // Keep camera positioned behind and above the Player
-    void FollowPlayer() => transform.position = Player.transform.position - transform.forward * CameraZoom + Vector3.up * 2;
+    void FollowPlayer() => transform.position = Player.transform.position - transform.forward * CameraZoom + Vector3.up * CameraUpPosition;
 
     // Rotate camera with rotation hotkeys. Also slowly follow Player's horizontal movement
     void HandleRotation()
