@@ -1,9 +1,0 @@
-﻿<Solution>
-  <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="TVender.VTransformEditor.csproj" />
-  <Project Path="VFolders.csproj" />
-  <Project Path="Assembly-CSharp-firstpass.csproj" />
-  <Project Path="Wingman.csproj" />
-  <Project Path="UnityPlayModeSaver.csproj" />
-  <Project Path="UnityPlayModeSaverEditor.csproj" />
-</Solution>
