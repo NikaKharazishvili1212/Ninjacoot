@@ -36,13 +36,13 @@ public class Cam : MonoBehaviour
         if (!Player.IsAlive) return;
         if (Mathf.Abs(Player.rotateCameraInput) > 0.1f)
         {
-            Quaternion PlayerRotation = Quaternion.Euler(CameraPitch, transform.rotation.eulerAngles.y + Player.rotateCameraInput * CameraRotationSpeed, 0);
-            transform.rotation = Quaternion.Lerp(transform.rotation, PlayerRotation, Time.deltaTime * CameraRotationSpeed);
+            Quaternion PlayerRotation = Quaternion.Euler(CameraPitch, transform.rotation.eulerAngles.y + Player.rotateCameraInput * CameraHotkeyRotationSpeed, 0);
+            transform.rotation = Quaternion.Lerp(transform.rotation, PlayerRotation, Time.deltaTime * CameraHotkeyRotationSpeed);
         }
         else if (Mathf.Abs(Player.moveInput.x) > 0.1f)
         {
-            Quaternion PlayerRotation = Quaternion.Euler(CameraPitch, transform.rotation.eulerAngles.y + Player.moveInput.x * CameraRotationSpeed / 2, 0);
-            transform.rotation = Quaternion.Lerp(transform.rotation, PlayerRotation, Time.deltaTime * CameraRotationSpeed);
+            Quaternion PlayerRotation = Quaternion.Euler(CameraPitch, transform.rotation.eulerAngles.y + Player.moveInput.x * CameraAutoRotationSpeed, 0);
+            transform.rotation = Quaternion.Lerp(transform.rotation, PlayerRotation, Time.deltaTime * CameraAutoRotationSpeed);
         }
     }
 

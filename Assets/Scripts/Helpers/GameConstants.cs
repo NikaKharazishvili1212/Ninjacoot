@@ -37,9 +37,10 @@ public static class GameConstants
     public const float XpTextMoveUpSpeed = 0.2f;
 
     // Camera
-    public const float CameraZoom = 10;
-    public const float CameraPitch = 25;
-    public const float CameraRotationSpeed = 10;
+    public const float CameraZoom = 8;
+    public const float CameraPitch = 10;
+    public const float CameraAutoRotationSpeed = 10;
+    public const float CameraHotkeyRotationSpeed = 14;
 
     // Tags
     public const string TagUntagged = "Untagged";

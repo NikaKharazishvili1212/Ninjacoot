@@ -127,7 +127,7 @@ public class Enemy : MonoBehaviour
         animator.Play(diedByProjectile ? Death2Hash : Death1Hash);
         if (diedByProjectile) PlaySound("GetHitByShruiken");
         else PlaySound("GetHitByPlayer");
-        this.Invoke2(0.2f, () => PlaySound("Death"));
+        this.Invoke2(0.25f, () => PlaySound("Death"));
 
         if (!isKillenOnce) { isKillenOnce = true; GameManager.Instance.AddKill(); }
 
