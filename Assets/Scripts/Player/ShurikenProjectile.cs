@@ -7,13 +7,32 @@ public class ShurikenProjectile : MonoBehaviour
     public static GameManager GM; // Initialized by GameManager
     [SerializeField] GameObject[] shurikenTypeToActivate;
     [SerializeField] AudioSource audioSource;
-    [SerializeField] AudioClip hitWall;
     Transform target;
     bool canRotate, alreadyHit;
     Vector3 initialPosition, movementDirection;
     TimerHandle lifespanHandle;
 
     void Update() => Move();
+
+    // Activates random Shuriken model - if it's Kunai, it won't have a rotation animation (Called by Player)
+    public void Shoot(Transform target, Transform player)
+    {
+        lifespanHandle?.CancelInvoke2(); // Cancel any leftover lifespan timer from previous use
+        alreadyHit = false;
+        int random = Random.Range(0, GM.ShurikenModels.Length);
+        for (int i = 0; i < shurikenTypeToActivate.Length; i++) shurikenTypeToActivate[i].SetActive(i == random);
+        canRotate = shurikenTypeToActivate[random].name != "Kunai";
+
+        this.target = target;
+        transform.position = player.position + player.up;
+        transform.rotation = player.rotation;
+        if (target) transform.LookAt(target.transform.position);
+        movementDirection = player.forward;
+        initialPosition = transform.position; // Save starting position to calculate how far it moved
+
+        gameObject.SetActive(true);
+        lifespanHandle = this.Invoke2(ShurikenLifeSpan, () => gameObject.SetActive(false));
+    }
 
     // If having target, move towards it, otherwise just move forward (unless it touches anything)
     void Move()
@@ -35,25 +54,6 @@ public class ShurikenProjectile : MonoBehaviour
         if (Vector3.Distance(initialPosition, transform.position) > ShurikenMaxGoingDistance) gameObject.SetActive(false);
     }
 
-    // Activates random Shuriken model - if it's Kunai, it won't have a rotation animation (Called by Player)
-    public void Shoot(Transform target, Transform player)
-    {
-        lifespanHandle?.CancelInvoke2(); // Cancel any leftover lifespan timer from previous use
-        alreadyHit = false;
-        int random = Random.Range(0, GM.ShurikenModels.Length);
-        for (int i = 0; i < shurikenTypeToActivate.Length; i++) shurikenTypeToActivate[i].SetActive(i == random);
-        canRotate = random != 3;
-
-        this.target = target;
-        transform.position = player.position + player.up;
-        transform.rotation = player.rotation;
-        movementDirection = player.forward;
-        initialPosition = transform.position; // Save starting position to calculate how far it moved
-
-        gameObject.SetActive(true);
-        lifespanHandle = this.Invoke2(ShurikenLifeSpan, () => gameObject.SetActive(false));
-    }
-
     // Even without finding target, it can still hit Enemy far away on touch, or just get stuck in something
     void OnTriggerEnter(Collider other)
     {
@@ -68,7 +68,7 @@ public class ShurikenProjectile : MonoBehaviour
         else if (other.gameObject.CompareTag(TagUntagged) || other.gameObject.CompareTag(TagTerrain))
         {
             alreadyHit = true;
-            audioSource.PlayOneShot(hitWall);
+            GM.PlaySound(audioSource, SoundType.ShurikenHitWall);
             movementDirection = Vector3.zero;
             canRotate = false;
         }

@@ -14,8 +14,7 @@ public static class PlayModeStateSaver
     static float flashEndTime = -1f;
     static readonly Type gameViewType = typeof(Editor).Assembly.GetType("UnityEditor.GameView");
 
-    static readonly System.Reflection.PropertyInfo inspectorModeProp =
-        typeof(SerializedObject).GetProperty("inspectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    static readonly System.Reflection.PropertyInfo inspectorModeProp = typeof(SerializedObject).GetProperty("inspectorMode", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
     static PlayModeStateSaver()
     {
@@ -27,14 +26,14 @@ public static class PlayModeStateSaver
                 foreach (var snap in snapshots)
                 {
                     var go = FindObject(snap);
-                    if (go == null) { Debug.LogWarning($"[PlayModeStateSaver] Could not find '{snap.path}' (sceneId={snap.sceneId})"); continue; }
+                    if (!go) continue;
 
                     foreach (var cs in snap.components)
                     {
                         var type = Type.GetType(cs.typeName);
                         if (type == null) continue;
                         var target = go.GetComponent(type);
-                        if (target == null) continue;
+                        if (!target) continue;
                         try
                         {
                             Undo.RecordObject(target, "Restore Play-Mode State");
@@ -45,7 +44,6 @@ public static class PlayModeStateSaver
                         catch { }
                     }
                 }
-                Debug.Log($"[PlayModeStateSaver] Restored {snapshots.Count} object(s).");
                 snapshots = null;
             };
         };
@@ -111,7 +109,7 @@ public static class PlayModeStateSaver
             foreach (var root in roots)
             {
                 var found = FindBySceneId(root, snap.sceneId);
-                if (found != null) { Debug.Log($"[PlayModeStateSaver] Found '{snap.path}' by sceneId"); return found; }
+                if (found) return found;
             }
         }
 
@@ -119,19 +117,17 @@ public static class PlayModeStateSaver
         string[] parts = snap.path.Split('/');
         foreach (var root in roots)
         {
-            Debug.Log($"[PlayModeStateSaver] Checking root '{root.name}' against path root '{parts[0]}'");
             if (root.name != parts[0]) continue;
-            if (parts.Length == 1) { Debug.Log($"[PlayModeStateSaver] Found '{snap.path}' by path (root)"); return root; }
+            if (parts.Length == 1) return root;
             var tr = root.transform;
             for (int i = 1; i < parts.Length; i++)
             {
                 tr = tr.Find(parts[i]);
                 if (tr == null) break;
-                if (i == parts.Length - 1) { Debug.Log($"[PlayModeStateSaver] Found '{snap.path}' by path"); return tr.gameObject; }
+                if (i == parts.Length - 1) return tr.gameObject;
             }
         }
 
-        Debug.LogWarning($"[PlayModeStateSaver] Could not find '{snap.path}' by either method. Scene roots: {string.Join(", ", Array.ConvertAll(roots, r => r.name))}");
         return null;
     }
 

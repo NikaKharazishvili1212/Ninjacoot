@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using static GameManager;
 using static Utils;
 using static GameConstants;
 
@@ -61,15 +60,15 @@ public partial class Player : MonoBehaviour
         this.Invoke2(spinTime, () => { isSpinning = false; if (IsAlive) animator.Play(IdleHash); });
     }
 
-    // Throws Shuriken towards nearest enemy in range. Has cooldown
-    void Throw()
+    // Shoots Shuriken towards nearest enemy in range. Has cooldown
+    void Shoot()
     {
         throwCD = Mathf.Min(throwCD + Time.deltaTime, throwReady);
-        if (!inputActions.Player.Throw.WasPressedThisFrame() || isSpinning || isThrowing || throwCD < throwReady) return;
+        if (!inputActions.Player.Shoot.WasPressedThisFrame() || isSpinning || isThrowing || throwCD < throwReady) return;
         throwCD = 0;
         isThrowing = true;
         animator.Play(ThrowHash);
-        GM.PlaySound(audioSource, SoundType.PlayerThrow);
+        GM.PlaySound(audioSource, SoundType.ShurikenShoot);
         FindAndShootNearestEnemy();
         this.Invoke2(0.6f, () => isThrowing = false);
     }

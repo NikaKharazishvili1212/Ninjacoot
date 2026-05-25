@@ -312,6 +312,7 @@ GameObject:
   - component: {fileID: 3446512996346571901}
   - component: {fileID: 7630879772939190076}
   - component: {fileID: 2868795822560626469}
+  - component: {fileID: 6141790862882462990}
   - component: {fileID: 4305727235200005440}
   m_Layer: 7
   m_Name: Skeleton_Minion
@@ -507,6 +508,33 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &6141790862882462990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 965680716178952127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a604639775929724099cd5bb29163883, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OptimizableObject
+  components:
+  - {fileID: 3446512996346571901}
+  - {fileID: 7630879772939190076}
+  - {fileID: 2868795822560626469}
+  - {fileID: 4305727235200005440}
+  - {fileID: 3111176992432932589}
+  - {fileID: 2011436401455218515}
+  - {fileID: 4470281895351125792}
+  - {fileID: 1338760322651965508}
+  - {fileID: 3239204753791245689}
+  - {fileID: 676065540088060724}
+  - {fileID: 8185641278658360484}
+  - {fileID: 1125209220836854952}
+  - {fileID: 4495007100064019502}
+  - {fileID: 1209323200265518038}
 --- !u!114 &4305727235200005440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -520,39 +548,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyType: 0
-  projectileType: 0
+  enemyProjectileType: 0
   xp: {x: 2, y: 5}
   speed: 0
   attackRange: 0
   attackDelay: 0
   maxMovementDistance: 25
   patrolInterval: 0
-  collider: {fileID: 9168564227376080355}
   animator: {fileID: 3446512996346571901}
   agent: {fileID: 2868795822560626469}
+  collider: {fileID: 9168564227376080355}
   audioSource: {fileID: 7630879772939190076}
-  getHitByShurikenSound: {fileID: 8300000, guid: 36b7fa9bd0a7bdb47974c9f54243ce3b, type: 3}
-  attackSound: {fileID: 8300000, guid: 08bcdc0e6396ff64c90cc3c5b563fece, type: 3}
-  footstepSounds:
-  - {fileID: 8300000, guid: e7808cbe99d257a4f8f13d2b5754d749, type: 3}
-  - {fileID: 8300000, guid: 99cdd099b651e3b41ba4aa17a24201c6, type: 3}
-  - {fileID: 8300000, guid: b9efdc92bd57f2e48aa41f728adf8520, type: 3}
-  - {fileID: 8300000, guid: 7040b3de25d64a74a9d33b44d0c6d855, type: 3}
-  - {fileID: 8300000, guid: 4be08237b604e674f8340c98aa189b27, type: 3}
-  - {fileID: 8300000, guid: e744f57cdb433ce47906196b894fe93c, type: 3}
-  getHitByPlayerSounds:
-  - {fileID: 8300000, guid: caceb4f132758d7488fc30e365c8a04a, type: 3}
-  - {fileID: 8300000, guid: d06270b9f840f924b992aa0282260887, type: 3}
-  - {fileID: 8300000, guid: e3bce0297d560d24e96e2223b81817ae, type: 3}
-  - {fileID: 8300000, guid: 030a1eca8c19a0243b9c27674e190519, type: 3}
-  - {fileID: 8300000, guid: e10b7f3e7d7f0e74288fa2c4a9300253, type: 3}
-  - {fileID: 8300000, guid: 30762b198da6d7e43bf9fbe00e78bc0b, type: 3}
-  deathSounds:
-  - {fileID: 8300000, guid: de1b64049e427f64f9cd423565c4affb, type: 3}
-  - {fileID: 8300000, guid: 0bf313f511d0af94489815e88b714809, type: 3}
-  - {fileID: 8300000, guid: 90bbb410bd5ecc3469ea554564a4665c, type: 3}
-  - {fileID: 8300000, guid: ff57a278c5f3912458655f9cb74b2932, type: 3}
-  - {fileID: 8300000, guid: 3112bc50a9345ba4e9bba34106f976db, type: 3}
 --- !u!1 &1446441424866066160
 GameObject:
   m_ObjectHideFlags: 0

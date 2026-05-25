@@ -4,6 +4,7 @@ using static GameConstants;
 /// <summary>Pooled by Enemy to shot specific projectile to the Player.</summary>
 public class EnemyProjectile : MonoBehaviour
 {
+    public static GameManager GM; // Initialized by GameManager
     public static Player Player; // Initialized by GameManager
     [SerializeField] GameObject[] projectileTypeToActivate;
     int projectileType;
@@ -13,7 +14,7 @@ public class EnemyProjectile : MonoBehaviour
     void Update()
     {
         // If the projectile is an Arrow, it will move in the direction it is facing; if it's a Spell, it will move towards the Player. Arrow moves faster
-        if (projectileType == (int)ProjectileType.Arrow) transform.position += transform.forward.normalized * EnemyProjectileArrowSpeed * Time.deltaTime;
+        if (projectileType == (int)EnemyProjectileType.Arrow) transform.position += transform.forward.normalized * EnemyProjectileArrowSpeed * Time.deltaTime;
         else transform.position += (Player.transform.position - transform.position + Vector3.up).normalized * EnemyProjectileSpellSpeed * Time.deltaTime;
 
         // When its lifespan reaches 0 or when the Player dies, disable the projectile to be pooled again later
@@ -21,7 +22,7 @@ public class EnemyProjectile : MonoBehaviour
         else lifespan -= Time.deltaTime;
     }
 
-    public void Shoot(Transform shooter, ProjectileType projectileType)
+    public void Shoot(Transform shooter, EnemyProjectileType projectileType)
     {
         alreadyHit = false;
         this.projectileType = (int)projectileType;
@@ -37,8 +38,8 @@ public class EnemyProjectile : MonoBehaviour
     {
         if (!collision.gameObject.CompareTag(TagPlayer) || alreadyHit) return;
         alreadyHit = true;
-        if (!(projectileType == (int)ProjectileType.Spell && Player.isSpinning)) Player.TakeDamage(); // Spell is countered by Player's spin
+        if (projectileType != (int)EnemyProjectileType.Spell || !Player.isSpinning) Player.TakeDamage();
+        Player.DamageSound(projectileType != (int)EnemyProjectileType.Spell ? SoundType.ArrowImpact : SoundType.SpellImpact);
         gameObject.SetActive(false);
-        // PlaySound(type == ProjectileType.Arrow ? "ArrowImpact" : "MageImpact");
     }
 }

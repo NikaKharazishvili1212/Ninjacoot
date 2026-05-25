@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Nikspector;
+using UnityEngine.AddressableAssets;
 using static GameConstants;
 
 /// <summary>Game Manager, which also acts like Global Referencer.</summary>
@@ -32,15 +33,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] AnimationClip hudOnAnimation, hudOffAnimation;
     bool isHudOn = true, canToggleHud = true;
 
-    // Every object gets sound from GameManager to play it
-    public enum SoundType
-    {
-        PlayerSpin = 0, PlayerThrow = 1, PlayerJump = 2, PlayerTakeDamage1 = 3, PlayerTakeDamage2 = 4, PlayerDeath1 = 4, PlayerDeath2 = 5
-        PlayerFall = 5, PlayerLevelUp = 6, ArrowImpact = 7, SpellImpact = 8, CoinTake = 9,
-    }
-    [field: SerializeField] public AudioClip[] Sounds { get; private set; }
-    public void PlaySound(AudioSource source, params SoundType[] variants) => source.PlayOneShot(Sounds[(int)variants[Random.Range(0, variants.Length)]]);
-
     [Button]
     void DeleteAllPlayerPrefs()
     {
@@ -58,7 +50,7 @@ public class GameManager : MonoBehaviour
         EnemyProjectiles = FindObjectsByType<EnemyProjectile>(FindObjectsInactive.Include, FindObjectsSortMode.None);
     }
 
-    void OnApplicationQuit() => SaveData();
+    // void OnApplicationQuit() => SaveData();
 
     void Awake()
     {
@@ -68,11 +60,15 @@ public class GameManager : MonoBehaviour
         ShurikenProjectile.GM = this;
         Enemy.GM = this;
         Enemy.Player = Player;
+        EnemyProjectile.GM = this;
         EnemyProjectile.Player = Player;
         Hazard.GM = this;
         XPText.Cam = Camera;
         LoadData();
     }
+
+    // Objects call this method to load and play audio clips from addersables
+    public void PlaySound(AudioSource audioSource, params SoundType[] variants) => Addressables.LoadAssetAsync<AudioClip>(variants[Random.Range(0, variants.Length)].ToString()).Completed += h => audioSource.PlayOneShot(h.Result);
 
     // Toggles hud on/off. Called by Player on hotkey
     public void ToggleHud()
@@ -134,7 +130,7 @@ public class GameManager : MonoBehaviour
 
     void SaveData()
     {
-        // Save taken coins
+        // Save taken coins to counting and disabling them
         int takenCoinsCount = 0;
         foreach (Transform coin in coinsParent.transform)
             if (!coin.gameObject.activeSelf)

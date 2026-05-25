@@ -3,16 +3,13 @@ using UnityEngine.AI;
 using static Utils;
 using static GameConstants;
 
-public enum EnemyType { Melee = 0, Ranged = 1 }
-public enum ProjectileType { None = 0, Arrow = 1, Spell = 2 }
-
 [SelectionBase]
 public class Enemy : MonoBehaviour
 {
     public static GameManager GM; // Initialized by GameManager
     public static Player Player; // Initialized by GameManager
     [SerializeField] EnemyType enemyType;
-    [SerializeField] ProjectileType projectileType;
+    [SerializeField] EnemyProjectileType enemyProjectileType;
     [SerializeField] Vector2 xp = new Vector2();
     [SerializeField] float speed, attackRange, attackDelay, maxMovementDistance = 25f, patrolInterval;
     public float PatrolSpeed => speed * 0.8f;
@@ -20,12 +17,10 @@ public class Enemy : MonoBehaviour
     public bool IsAlive { get; private set; } = true;
     bool hasTarget, isDoingAttackAnimation, isGoingBack, isKillenOnce;
 
-    [SerializeField] new Collider collider;
     [SerializeField] Animator animator;
     [SerializeField] NavMeshAgent agent; Vector3 startingPosition;
+    [SerializeField] new Collider collider;
     [SerializeField] AudioSource audioSource;
-    [SerializeField] AudioClip getHitByShurikenSound, attackSound;
-    [SerializeField] AudioClip[] footstepSounds, getHitByPlayerSounds, deathSounds;
 
     void Start()
     {
@@ -40,15 +35,6 @@ public class Enemy : MonoBehaviour
     {
         PatrolDetectChase();
         UpdateAnimations();
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag(TagPlayer))
-        {
-            hasTarget = true;
-            agent.ResetPath();
-        }
     }
 
     // We need this check to auto update NPC's animations(Idle, Running, Walking)
@@ -104,7 +90,7 @@ public class Enemy : MonoBehaviour
                     }
                 }
                 // Else chase the Target
-                else
+                else if (!isDoingAttackAnimation)
                 {
                     agent.stoppingDistance = attackRange;
                     agent.SetDestination(Player.transform.position);
@@ -113,26 +99,28 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    public void HasTarget(bool hasTarget) => this.hasTarget = hasTarget;
+
     public void DiedByPlayer() => DeathAndRespawn();
 
-    public void DiedByProjectile() => DeathAndRespawn(diedByProjectile: true);
+    public void DiedByProjectile() => DeathAndRespawn(diedByPlayer: false);
 
-    void DeathAndRespawn(bool diedByProjectile = false)
+    void DeathAndRespawn(bool diedByPlayer = true)
     {
         IsAlive = false;
         hasTarget = false;
         isGoingBack = false;
         collider.enabled = false;
         agent.ResetPath();
-        animator.Play(diedByProjectile ? Death2Hash : Death1Hash);
-        if (diedByProjectile) PlaySound("GetHitByShruiken");
-        else PlaySound("GetHitByPlayer");
-        this.Invoke2(0.25f, () => PlaySound("Death"));
+        animator.Play(diedByPlayer ? Death1Hash : Death2Hash);
+        if (diedByPlayer) GM.PlaySound(audioSource, SoundType.PlayerHitEnemy1, SoundType.PlayerHitEnemy2, SoundType.PlayerHitEnemy3, SoundType.PlayerHitEnemy4, SoundType.PlayerHitEnemy5, SoundType.PlayerHitEnemy6);
+        else GM.PlaySound(audioSource, SoundType.ShurikenHitEnemy);
+        this.Invoke2(0.25f, () => GM.PlaySound(audioSource, SoundType.SkeletonDeath1, SoundType.SkeletonDeath2, SoundType.SkeletonDeath3, SoundType.SkeletonDeath4, SoundType.SkeletonDeath5));
 
-        if (!isKillenOnce) { isKillenOnce = true; GameManager.Instance.AddKill(); }
+        if (!isKillenOnce) { isKillenOnce = true; GM.AddKill(); }
 
         int randomXp = Random.Range((int)xp.x, (int)xp.y + 1);
-        PoolComponent(GameManager.Instance.XpTexts)?.ShowXPText(transform, randomXp);
+        PoolComponent(GM.XpTexts)?.ShowXPText(transform, randomXp);
         Player.GainXP(randomXp);
 
         this.Invoke2(EnemyDeathDeactivateDelay, () => gameObject.SetActive(false));
@@ -149,23 +137,18 @@ public class Enemy : MonoBehaviour
     // Enemy's attack animation calls for this method when NPC is attacking to deal instant damage if melee, or just shoot projectile
     void DealDamage()
     {
-        if (enemyType == EnemyType.Melee) Player.TakeDamage();
-        else PoolComponent(GM.EnemyProjectiles).Shoot(transform, projectileType);
-    }
-
-    // Enemy's attack animation calls for this method's "Attack" sound
-    void PlaySound(string soundName)
-    {
-        switch (soundName)
+        if (enemyType == EnemyType.Melee)
         {
-            case "Footsteps": audioSource.PlayOneShot(footstepSounds[Random.Range(0, footstepSounds.Length)]); break;
-            case "GetHitByPlayer": audioSource.PlayOneShot(getHitByPlayerSounds[Random.Range(0, getHitByPlayerSounds.Length)]); break;
-            case "GetHitByShruiken": audioSource.PlayOneShot(getHitByShurikenSound); break;
-            case "Death": audioSource.PlayOneShot(deathSounds[Random.Range(0, deathSounds.Length)]); break;
-            case "Attack": audioSource.PlayOneShot(attackSound); break;
+            Player.TakeDamage();
+            Player.DamageSound(SoundType.SwordImpact);
+        }
+        else
+        {
+            PoolComponent(GM.EnemyProjectiles).Shoot(transform, enemyProjectileType);
+            GM.PlaySound(audioSource, enemyProjectileType == EnemyProjectileType.Spell ? SoundType.SpellShoot : SoundType.ArrowShoot);
         }
     }
 
     // Triggered by moving animation
-    // void PlayRandomFootstepSound() => audioSource.PlayOneShot(GM.FootstepSounds[Random.Range(0, GM.FootstepSounds.Length)]);
+    void PlayRandomFootstepSound() => GM.PlaySound(audioSource, SoundType.Footsteps1, SoundType.Footsteps2, SoundType.Footsteps3, SoundType.Footsteps4, SoundType.Footsteps5, SoundType.Footsteps6);
 }

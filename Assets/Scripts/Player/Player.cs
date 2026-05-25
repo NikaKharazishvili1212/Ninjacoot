@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using static GameManager;
 using static Utils;
 using static GameConstants;
 
@@ -22,14 +21,9 @@ public partial class Player : MonoBehaviour
     [SerializeField] Image energyFill, healthFill, throwFill, xpFill;
     [SerializeField] TextMeshProUGUI healthText, levelText, xpText;
     [SerializeField] Animator animator;
-
-    // RB and physics
     [SerializeField] Rigidbody rb;
     [SerializeField] CapsuleCollider capsuleCollider;
-
     [SerializeField] AudioSource audioSource;
-    [SerializeField] AudioClip[] footstepSounds, painSounds, deathSounds;
-    [SerializeField] AudioClip shoot, jump, spin, arrowImpact, mageImpact, fall, coin, levelUp;
 
     void Awake()
     {
@@ -44,7 +38,7 @@ public partial class Player : MonoBehaviour
             Move();
             Sprint();
             Spin();
-            Throw();
+            Shoot();
         }
         UpdateStates();
     }
@@ -65,13 +59,13 @@ public partial class Player : MonoBehaviour
 
     void UpdateStates()
     {
-        isGrounded = IsGrounded(capsuleCollider); // Calculates if Player is grounded to know he can jump or just update his animations
-        isSprinting = canSprint && isGrounded && moveInput != Vector2.zero && inputActions.Player.Sprint.IsPressed(); // Energy + grounded + moving + key = sprint
+        isGrounded = IsGrounded(capsuleCollider);
+        isSprinting = canSprint && isGrounded && moveInput != Vector2.zero && inputActions.Player.Sprint.IsPressed();
         currentSpeed = isTouchingWater ? speed * (isSprinting ? 1f : 0.7f) : isSprinting ? speed * 1.5f : speed; // Faster when sprinting; water slows
 
-        animator.SetInteger(MovingStateHash, moveInput != Vector2.zero ? 1 : 0); // 1: Moving, 0: Idle animations
-        animator.SetFloat(MovingSpeedAnimatorHash, currentSpeed / 10); // Moving speed affects move animation speed
         animator.SetBool(IsGroundedHash, isGrounded);
+        animator.SetInteger(MovingStateHash, moveInput != Vector2.zero ? 1 : 0); // 1 - Moving, 0 - Idle animations
+        animator.SetFloat(MovingSpeedAnimatorHash, currentSpeed / 10); // Moving speed affects move animation speed
     }
 
     void FindAndShootNearestEnemy()
@@ -101,7 +95,7 @@ public partial class Player : MonoBehaviour
         if (collision.gameObject.CompareTag(TagWater)) isTouchingWater = true;
         else if (collision.gameObject.CompareTag(TagCoin))
         {
-            GM.PlaySound(audioSource, SoundType.CoinTake);
+            GM.PlaySound(audioSource, SoundType.TakeCoin);
             GM.AddCoin(collision.gameObject);
         }
     }
@@ -114,7 +108,7 @@ public partial class Player : MonoBehaviour
             currentXP = currentXP - maxXP;
             maxXP = (int)(maxXP * 1.5 + level * 20);
             level += 1;
-            this.Invoke2(0.5f, () => { GM.PlaySound(audioSource, SoundType.PlayerLevelUp); GM.EventText(2); });
+            this.Invoke2(0.5f, () => { GM.PlaySound(audioSource, SoundType.LevelUp); GM.EventText(2); });
         }
 
         UpdateHud(LevelText: true, XpText: true, XpFill: true);
@@ -127,7 +121,7 @@ public partial class Player : MonoBehaviour
         currentHealth -= 1;
         IsAlive = currentHealth > 0;
         UpdateHud(HealthText: true, HealthFill: true);
-        GM.PlaySound(audioSource, SoundType.PlayerTakeDamage);
+        GM.PlaySound(audioSource, SoundType.PlayerTakeDamage1, SoundType.PlayerTakeDamage2, SoundType.PlayerTakeDamage3);
         if (!isSpinning) animator.Play(GetHitHash);
 
         if (!IsAlive) // Death
@@ -135,7 +129,7 @@ public partial class Player : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             isSpinning = false;
             animator.Play(DeathHash);
-            GM.PlaySound(audioSource, SoundType.PlayerDeath);
+            GM.PlaySound(audioSource, SoundType.PlayerDeath1, SoundType.PlayerDeath2);
             GM.PlaySound(audioSource, SoundType.PlayerFall);
             GM.EventText(1);
             this.Invoke2(PlayerReviveDelay, () =>
@@ -155,6 +149,8 @@ public partial class Player : MonoBehaviour
             });
         }
     }
+
+    public void DamageSound(SoundType soundType) => GM.PlaySound(audioSource, soundType);
 
     void LoadPlayerStats()
     {
@@ -201,5 +197,5 @@ public partial class Player : MonoBehaviour
     }
 
     // Triggered by moving animation
-    void PlayRandomFootstepSound() => audioSource.PlayOneShot(GM.PlaySound());
+    void PlayRandomFootstepSound() => GM.PlaySound(audioSource, SoundType.Footsteps1, SoundType.Footsteps2, SoundType.Footsteps3, SoundType.Footsteps4, SoundType.Footsteps5, SoundType.Footsteps6);
 }

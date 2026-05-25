@@ -1,0 +1,238 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Sounds
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Sounds
+  m_GUID: 3f3fa1e397b404946a63e009b80db89e
+  m_SerializeEntries:
+  - m_GUID: 030a1eca8c19a0243b9c27674e190519
+    m_Address: PlayerHitEnemy4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 08bcdc0e6396ff64c90cc3c5b563fece
+    m_Address: SwordImpact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0bf313f511d0af94489815e88b714809
+    m_Address: SkeletonDeath2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25b6979f87d19634f87973341df30d0c
+    m_Address: MenuSubmit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30762b198da6d7e43bf9fbe00e78bc0b
+    m_Address: PlayerHitEnemy6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3112bc50a9345ba4e9bba34106f976db
+    m_Address: SkeletonDeath5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36b7fa9bd0a7bdb47974c9f54243ce3b
+    m_Address: ShurikenHitEnemy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a362bb8069ac3f48b0340ead9ba92d3
+    m_Address: PlayerSpin
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 406b0843a1f42ad418b457b48be4f84a
+    m_Address: MenuKeyboard
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42a0680eaa9bd3941ac333c891b61649
+    m_Address: TakeCoin
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4482b412353b2fd46864aa1bcad42d12
+    m_Address: PlayerTakeDamage1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4be08237b604e674f8340c98aa189b27
+    m_Address: Footsteps5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ee6088ff48ff894a91f333a6b38d108
+    m_Address: ShurikenShoot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59a0362dc47824a4f99a5098bcc987d7
+    m_Address: SpellImpact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6201cd414478e2547bafaa4105fa3151
+    m_Address: Music_Gameplay
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ef149b1725d97f47b0664e8f7e8dce2
+    m_Address: MenuCancel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7040b3de25d64a74a9d33b44d0c6d855
+    m_Address: Footsteps4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84e10a1e445aea54ca28d7ea488e7c32
+    m_Address: PlayerTakeDamage3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d80dd644f1553d41ae8d16e5fa0e30a
+    m_Address: ArrowShoot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90bbb410bd5ecc3469ea554564a4665c
+    m_Address: SkeletonDeath3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93595d32539207f408c0e6675b383a40
+    m_Address: LevelUp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99a7ae90abfdc8745a473b642c377a4a
+    m_Address: Music_Menu
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99cdd099b651e3b41ba4aa17a24201c6
+    m_Address: Footsteps2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9bd8a08eaa1372241978a62b26c26c8c
+    m_Address: SpellShoot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d3fee7132d25cc41adf8f1e1f35df95
+    m_Address: Checkpoint
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a85115bfe00090a458611a85e193d746
+    m_Address: PlayerTakeDamage2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9efdc92bd57f2e48aa41f728adf8520
+    m_Address: Footsteps3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb7797cd87b717742815e8829088287e
+    m_Address: MenuSelection
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: caceb4f132758d7488fc30e365c8a04a
+    m_Address: PlayerHitEnemy1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d06270b9f840f924b992aa0282260887
+    m_Address: PlayerHitEnemy2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d38df0f55fe01b94bbeee7c2f8ec1bf1
+    m_Address: PlayerDeath1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d70239cb772fe7d4fae10875bdf4305e
+    m_Address: PlayerFall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7a17664e7ec5ed4a9990a1517fdbf98
+    m_Address: PlayerJump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de1b64049e427f64f9cd423565c4affb
+    m_Address: SkeletonDeath1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e10b7f3e7d7f0e74288fa2c4a9300253
+    m_Address: PlayerHitEnemy5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3bce0297d560d24e96e2223b81817ae
+    m_Address: PlayerHitEnemy3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6bff87a2f287a04bbf8eea172aefaad
+    m_Address: TakeItem
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e744f57cdb433ce47906196b894fe93c
+    m_Address: Footsteps6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7808cbe99d257a4f8f13d2b5754d749
+    m_Address: Footsteps1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9d9107fa962a634e8ce559cb598179e
+    m_Address: ShurikenHitWall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec666c6b2c7e51942b256f71f2721bcb
+    m_Address: PlayerDeath2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: efc349ab6b55109409a4b348add613d0
+    m_Address: ArrowImpact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff57a278c5f3912458655f9cb74b2932
+    m_Address: SkeletonDeath4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 4faa83552ce9b7e47bb0685e872c0d1c, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: ca4335ed8bb231840b1fd6f7d502f249, type: 2}
+    - {fileID: 11400000, guid: 7449d164f3320e547bce381f66d935f7, type: 2}

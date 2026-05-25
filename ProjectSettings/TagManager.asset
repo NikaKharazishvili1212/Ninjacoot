@@ -9,6 +9,7 @@ TagManager:
   - Terrain
   - Water
   - MovingPlatform
+  - Ignore
   layers:
   - Default
   - TransparentFX
