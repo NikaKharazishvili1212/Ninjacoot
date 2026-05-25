@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using static GameManager;
 using static Utils;
 using static GameConstants;
 
@@ -56,7 +57,7 @@ public partial class Player : MonoBehaviour
         spinCD = 0;
         isSpinning = true;
         animator.Play(Chance(50) ? Spin1Hash : Spin2Hash);
-        PlaySound("Spin");
+        GM.PlaySound(audioSource, SoundType.PlayerSpin);
         this.Invoke2(spinTime, () => { isSpinning = false; if (IsAlive) animator.Play(IdleHash); });
     }
 
@@ -68,7 +69,7 @@ public partial class Player : MonoBehaviour
         throwCD = 0;
         isThrowing = true;
         animator.Play(ThrowHash);
-        PlaySound("Throw");
+        GM.PlaySound(audioSource, SoundType.PlayerThrow);
         FindAndShootNearestEnemy();
         this.Invoke2(0.6f, () => isThrowing = false);
     }
@@ -77,7 +78,7 @@ public partial class Player : MonoBehaviour
     {
         if (!IsAlive || !isGrounded) return;
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, PlayerJumpStrength, rb.linearVelocity.z);
-        PlaySound("Jump");
+        GM.PlaySound(audioSource, SoundType.PlayerJump);
     }
 
     void ToggleHud(UnityEngine.InputSystem.InputAction.CallbackContext _) => GM.ToggleHud();

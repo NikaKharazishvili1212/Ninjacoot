@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using static GameManager;
 using static Utils;
 using static GameConstants;
 
@@ -8,7 +9,7 @@ using static GameConstants;
 // Main partial class for Player
 public partial class Player : MonoBehaviour
 {
-    public static GameManager GM;
+    public static GameManager GM; // Initialized by GameManager
     float currentHealth, maxHealth = 3, currentEnergy, maxEnergy = 3, currentSpeed, speed = 8;
     int currentXP, maxXP = 50, level = 1;
     float spinTime, spinCD, spinReady = 3, throwCD, throwReady = 3;
@@ -78,7 +79,7 @@ public partial class Player : MonoBehaviour
         Transform nearest = null;
         float minDistance = Mathf.Infinity;
 
-        foreach (var hit in Physics.OverlapSphere(transform.position, ShurikenDetectionRadius, LayerMask.GetMask("Enemy")))
+        foreach (var hit in Physics.OverlapSphere(transform.position, ShurikenDetectionRadius, LayerMask.GetMask(TagEnemy)))
         {
             Vector3 directionToHit = (hit.transform.position - transform.position).normalized;
             if (Vector3.Angle(transform.forward, directionToHit) > ShurikenDetectionAngle) continue;
@@ -91,7 +92,7 @@ public partial class Player : MonoBehaviour
     }
 
     void OnCollisionExit(Collision collision) => transform.parent = null;
-    // void OnCollisionStay(Collision collision) { if (collision.gameObject.CompareTag("MovingPlatform")) transform.SetParent(collision.transform); }
+    void OnCollisionStay(Collision collision) { if (collision.gameObject.CompareTag(TagMovingPlatform)) transform.SetParent(collision.transform); }
     void OnTriggerExit(Collider collision) { if (collision.gameObject.CompareTag(TagWater)) isTouchingWater = false; }
     void OnTriggerEnter(Collider collision)
     {
@@ -100,7 +101,7 @@ public partial class Player : MonoBehaviour
         if (collision.gameObject.CompareTag(TagWater)) isTouchingWater = true;
         else if (collision.gameObject.CompareTag(TagCoin))
         {
-            PlaySound("Coin");
+            GM.PlaySound(audioSource, SoundType.CoinTake);
             GM.AddCoin(collision.gameObject);
         }
     }
@@ -113,11 +114,10 @@ public partial class Player : MonoBehaviour
             currentXP = currentXP - maxXP;
             maxXP = (int)(maxXP * 1.5 + level * 20);
             level += 1;
-            UpdateHud(LevelText: true);
-            this.Invoke2(0.5f, () => { PlaySound("LevelUp"); GM.EventText(2); });
+            this.Invoke2(0.5f, () => { GM.PlaySound(audioSource, SoundType.PlayerLevelUp); GM.EventText(2); });
         }
 
-        UpdateHud(XpText: true, XpFill: true);
+        UpdateHud(LevelText: true, XpText: true, XpFill: true);
     }
 
     // This method is called by Enemy's attack animation, his projectile or when Player touches thorns
@@ -127,7 +127,7 @@ public partial class Player : MonoBehaviour
         currentHealth -= 1;
         IsAlive = currentHealth > 0;
         UpdateHud(HealthText: true, HealthFill: true);
-        PlaySound("Pain");
+        GM.PlaySound(audioSource, SoundType.PlayerTakeDamage);
         if (!isSpinning) animator.Play(GetHitHash);
 
         if (!IsAlive) // Death
@@ -135,8 +135,8 @@ public partial class Player : MonoBehaviour
             rb.linearVelocity = Vector3.zero;
             isSpinning = false;
             animator.Play(DeathHash);
-            PlaySound("Death");
-            PlaySound("Fall");
+            GM.PlaySound(audioSource, SoundType.PlayerDeath);
+            GM.PlaySound(audioSource, SoundType.PlayerFall);
             GM.EventText(1);
             this.Invoke2(PlayerReviveDelay, () =>
             {
@@ -200,21 +200,6 @@ public partial class Player : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    void PlaySound(string soundName)
-    {
-        switch (soundName)
-        {
-            case "Footsteps": audioSource.PlayOneShot(footstepSounds[Random.Range(0, footstepSounds.Length)]); break;
-            case "Throw": audioSource.PlayOneShot(shoot); break;
-            case "Spin": audioSource.PlayOneShot(spin); break;
-            case "Jump": audioSource.PlayOneShot(jump); break;
-            case "Pain": audioSource.PlayOneShot(painSounds[Random.Range(0, painSounds.Length)]); break;
-            case "Death": audioSource.PlayOneShot(deathSounds[Random.Range(0, deathSounds.Length)]); break;
-            case "Fall": audioSource.PlayOneShot(fall); break;
-            case "ArrowImpact": audioSource.PlayOneShot(arrowImpact); break;
-            case "MageImpact": audioSource.PlayOneShot(mageImpact); break;
-            case "Coin": audioSource.PlayOneShot(coin); break;
-            case "LevelUp": audioSource.PlayOneShot(levelUp); break;
-        }
-    }
+    // Triggered by moving animation
+    void PlayRandomFootstepSound() => audioSource.PlayOneShot(GM.PlaySound());
 }

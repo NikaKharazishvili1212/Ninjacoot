@@ -50,6 +50,7 @@ public static class GameConstants
     public const string TagCoin = "Coin";
     public const string TagTerrain = "Terrain";
     public const string TagWater = "Water";
+    public const string TagMovingPlatform = "MovingPlatform";
 
     // Animation Hashes
     public static readonly int IdleHash = Animator.StringToHash("Idle");

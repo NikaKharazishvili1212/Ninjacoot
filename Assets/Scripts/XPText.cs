@@ -5,7 +5,7 @@ using static GameConstants;
 
 public class XPText : MonoBehaviour
 {
-    public static Transform Cam;
+    public static Transform Cam; // Initialized by GameManager
     [SerializeField] TextMeshPro xpText;
 
     public void ShowXPText(Transform target, int xpAmount)

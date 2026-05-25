@@ -9,8 +9,8 @@ public enum ProjectileType { None = 0, Arrow = 1, Spell = 2 }
 [SelectionBase]
 public class Enemy : MonoBehaviour
 {
-    public static GameManager GM;
-    public static Player Player;
+    public static GameManager GM; // Initialized by GameManager
+    public static Player Player; // Initialized by GameManager
     [SerializeField] EnemyType enemyType;
     [SerializeField] ProjectileType projectileType;
     [SerializeField] Vector2 xp = new Vector2();
@@ -165,4 +165,7 @@ public class Enemy : MonoBehaviour
             case "Attack": audioSource.PlayOneShot(attackSound); break;
         }
     }
+
+    // Triggered by moving animation
+    // void PlayRandomFootstepSound() => audioSource.PlayOneShot(GM.FootstepSounds[Random.Range(0, GM.FootstepSounds.Length)]);
 }

@@ -32,6 +32,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] AnimationClip hudOnAnimation, hudOffAnimation;
     bool isHudOn = true, canToggleHud = true;
 
+    // Every object gets sound from GameManager to play it
+    public enum SoundType
+    {
+        PlayerSpin = 0, PlayerThrow = 1, PlayerJump = 2, PlayerTakeDamage1 = 3, PlayerTakeDamage2 = 4, PlayerDeath1 = 4, PlayerDeath2 = 5
+        PlayerFall = 5, PlayerLevelUp = 6, ArrowImpact = 7, SpellImpact = 8, CoinTake = 9,
+    }
+    [field: SerializeField] public AudioClip[] Sounds { get; private set; }
+    public void PlaySound(AudioSource source, params SoundType[] variants) => source.PlayOneShot(Sounds[(int)variants[Random.Range(0, variants.Length)]]);
+
     [Button]
     void DeleteAllPlayerPrefs()
     {
@@ -60,6 +69,7 @@ public class GameManager : MonoBehaviour
         Enemy.GM = this;
         Enemy.Player = Player;
         EnemyProjectile.Player = Player;
+        Hazard.GM = this;
         XPText.Cam = Camera;
         LoadData();
     }
