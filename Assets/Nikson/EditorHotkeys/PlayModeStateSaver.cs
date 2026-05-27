@@ -7,7 +7,7 @@ using UnityEngine;
 [InitializeOnLoad]
 public static class PlayModeStateSaver
 {
-    struct SavedComponent { public string typeName; public string json; public bool useEditorJson; }
+    struct SavedComponent { public string typeName; public string json; public bool useEditorJson; public bool enabled; }
     struct SavedObject { public int sceneId; public string path; public List<SavedComponent> components; }
 
     static List<SavedObject> snapshots;
@@ -39,6 +39,7 @@ public static class PlayModeStateSaver
                             Undo.RecordObject(target, "Restore Play-Mode State");
                             if (cs.useEditorJson) EditorJsonUtility.FromJsonOverwrite(cs.json, target);
                             else JsonUtility.FromJsonOverwrite(cs.json, target);
+                            if (target is Behaviour behaviour) behaviour.enabled = cs.enabled;
                             EditorUtility.SetDirty(target);
                         }
                         catch { }
@@ -69,7 +70,6 @@ public static class PlayModeStateSaver
         {
             int id = GetSceneId(go);
 
-            // Build full hierarchy path as fallback for prefabs where sceneId is -1
             string path = go.name;
             var t = go.transform.parent;
             while (t != null) { path = t.name + "/" + path; t = t.parent; }
@@ -85,7 +85,8 @@ public static class PlayModeStateSaver
                     {
                         typeName = comp.GetType().AssemblyQualifiedName,
                         json = useEditorJson ? EditorJsonUtility.ToJson(comp) : JsonUtility.ToJson(comp),
-                        useEditorJson = useEditorJson
+                        useEditorJson = useEditorJson,
+                        enabled = comp is Behaviour b ? b.enabled : true
                     });
                 }
                 catch { }
@@ -103,7 +104,6 @@ public static class PlayModeStateSaver
     {
         var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
 
-        // Try by sceneId first (reliable for non-prefabs)
         if (snap.sceneId != -1)
         {
             foreach (var root in roots)
@@ -113,7 +113,6 @@ public static class PlayModeStateSaver
             }
         }
 
-        // Fall back to hierarchy path (for prefabs)
         string[] parts = snap.path.Split('/');
         foreach (var root in roots)
         {
@@ -146,7 +145,7 @@ public static class PlayModeStateSaver
     {
         var so = new SerializedObject(obj);
         inspectorModeProp.SetValue(so, InspectorMode.Debug, null);
-        var prop = so.FindProperty("m_LocalIdentfierInFile"); // Unity's intentional misspelling
+        var prop = so.FindProperty("m_LocalIdentfierInFile");
         return prop != null && prop.intValue != 0 ? prop.intValue : -1;
     }
 }

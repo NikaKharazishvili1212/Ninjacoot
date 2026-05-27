@@ -36,11 +36,18 @@ public static class EditorMethods
         if (gameWins.Length == 0 || EditorWindow.mouseOverWindow?.GetType() != gameViewType) return;
 
         var gameWin = gameWins[0] as EditorWindow;
-        Rect winRect = gameWin.position;
         Vector2 screenMouse = GUIUtility.GUIToScreenPoint(e.mousePosition);
-        Vector2 viewportPos = screenMouse - new Vector2(winRect.x, winRect.y);
-        float viewX = viewportPos.x / winRect.width;
-        float viewY = 1f - (viewportPos.y / winRect.height);
+        Vector2 localMouse = screenMouse - new Vector2(gameWin.position.x, gameWin.position.y);
+
+        // Get the actual rendered game area via reflection to account for toolbar and letterboxing
+        var gameViewField = gameViewType.GetMethod("GetMainGameViewRenderRect",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Rect renderRect = gameViewField != null
+            ? (Rect)gameViewField.Invoke(null, null)
+            : new Rect(0, 21, gameWin.position.width, gameWin.position.height - 21);
+
+        float viewX = (localMouse.x - renderRect.x) / renderRect.width;
+        float viewY = 1f - (localMouse.y - renderRect.y) / renderRect.height;
 
         var cam = Camera.main;
         if (cam == null) return;
@@ -71,10 +78,11 @@ public static class EditorMethods
 
     public static void ToggleActive()
     {
-        foreach (var go in Selection.gameObjects) { Undo.RecordObject(go, "Toggle Active"); go.SetActive(!go.activeSelf); }
         if (Selection.gameObjects.Length == 0) return;
-        EditorNotifier.Show(Selection.gameObjects.Length == 1 ? (Selection.activeGameObject.activeSelf ? "Activated" : "Deactivated") : $"Toggled ({Selection.gameObjects.Length})");
-        PlaySound(Selection.activeGameObject.activeSelf ? "Activate" : "Deactivate");
+        bool targetState = !Selection.gameObjects[0].activeSelf;
+        foreach (var go in Selection.gameObjects) { Undo.RecordObject(go, "Toggle Active"); go.SetActive(targetState); }
+        EditorNotifier.Show(Selection.gameObjects.Length == 1 ? (targetState ? "Activated" : "Deactivated") : (targetState ? $"Activated ({Selection.gameObjects.Length})" : $"Deactivated ({Selection.gameObjects.Length})"));
+        PlaySound(targetState ? "Activate" : "Deactivate");
     }
 
     public static void AlignCameraWithSceneView()
@@ -93,8 +101,9 @@ public static class EditorMethods
     public static void ToggleMuteAudio()
     {
         EditorUtility.audioMasterMute = !EditorUtility.audioMasterMute;
-        EditorNotifier.Show(EditorUtility.audioMasterMute ? "Audio On" : "Audio Off");
-        PlaySound(EditorUtility.audioMasterMute ? "Activate" : "Deactivate");
+        bool isAudioOff = !EditorUtility.audioMasterMute;
+        EditorNotifier.Show(isAudioOff ? "Audio On" : "Audio Off");
+        PlaySound(isAudioOff ? "Activate" : "Deactivate");
     }
 
     public static void ToggleStats()
@@ -133,6 +142,7 @@ public static class EditorMethods
 
     public static void StepFrame()
     {
+        if (!EditorApplication.isPaused) return;
         EditorApplication.Step();
         EditorNotifier.Show("Frame stepped");
         PlaySound("Action");
@@ -145,27 +155,46 @@ public static class EditorMethods
         PlaySound(!EditorApplication.isPaused ? "Activate" : "Deactivate");
     }
 
-    public static void TogglePlay()
+    public static void TogglePlayOrFocusGameView()
     {
+        var focusedType = EditorWindow.focusedWindow?.GetType();
+        bool sceneViewFocused = focusedType == typeof(SceneView);
+
+        if (sceneViewFocused)
+        {
+            if (maximizedProp != null)
+            {
+                var sceneWins = Resources.FindObjectsOfTypeAll(typeof(SceneView));
+                if (sceneWins.Length > 0 && (bool)maximizedProp.GetValue(sceneWins[0]))
+                    maximizedProp.SetValue(sceneWins[0], false);
+            }
+
+            var gameWins = Resources.FindObjectsOfTypeAll(gameViewType);
+            if (gameWins.Length == 0) return;
+            (gameWins[0] as EditorWindow).Focus();
+            EditorNotifier.Show("Game view");
+            return;
+        }
+
         if (!EditorApplication.isPlaying) { EditorApplication.EnterPlaymode(); EditorNotifier.Show("Play"); }
         else { EditorApplication.ExitPlaymode(); EditorNotifier.Show("Stop"); }
     }
 
-    public static void ToggleSceneFullscreen()
+    public static void ToggleSceneView()
     {
-        if (maximizedProp == null) return;
-        var gameWin = Resources.FindObjectsOfTypeAll(gameViewType);
-        if (gameWin.Length > 0) maximizedProp.SetValue(gameWin[0], false);
-        var sceneWin = Resources.FindObjectsOfTypeAll(typeof(SceneView));
-        if (sceneWin.Length > 0)
+        if (maximizedProp != null)
         {
-            bool newValue = !(bool)maximizedProp.GetValue(sceneWin[0]);
-            maximizedProp.SetValue(sceneWin[0], newValue);
-            EditorNotifier.Show(newValue ? "Fullscreen On" : "Fullscreen Off");
+            var gameWins = Resources.FindObjectsOfTypeAll(gameViewType);
+            if (gameWins.Length > 0 && (bool)maximizedProp.GetValue(gameWins[0])) maximizedProp.SetValue(gameWins[0], false);
         }
+
+        var sceneWins = Resources.FindObjectsOfTypeAll(typeof(SceneView));
+        if (sceneWins.Length == 0) return;
+        (sceneWins[0] as EditorWindow).Focus();
+        EditorNotifier.Show("Scene view");
     }
 
-    public static void SaveComponentState()
+    public static void SavePlayModeState()
     {
         if (Selection.gameObjects.Length == 0 || !EditorApplication.isPlaying) return;
         PlayModeStateSaver.Save();
@@ -194,17 +223,15 @@ public static class EditorMethods
 
     public static void SnapToGround()
     {
+        int snappedCount = 0;
+
         foreach (var go in Selection.gameObjects)
         {
             var transforms = go.GetComponentsInChildren<Transform>();
             var originalLayers = new int[transforms.Length];
             for (int i = 0; i < transforms.Length; i++) { originalLayers[i] = transforms[i].gameObject.layer; transforms[i].gameObject.layer = 2; }
 
-            bool didHit = Physics.Raycast(go.transform.position, Vector3.down, out RaycastHit hit, Mathf.Infinity);
-            for (int i = 0; i < transforms.Length; i++) transforms[i].gameObject.layer = originalLayers[i];
-            if (!didHit) continue;
-
-            float lowestWorldY = float.MaxValue;
+            float lowestY = float.MaxValue;
             bool hasMesh = false;
 
             foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
@@ -212,23 +239,37 @@ public static class EditorMethods
                 if (mf.sharedMesh == null) continue;
                 hasMesh = true;
                 var m = mf.transform.localToWorldMatrix;
-                foreach (var v in mf.sharedMesh.vertices) { float wy = m.MultiplyPoint3x4(v).y; if (wy < lowestWorldY) lowestWorldY = wy; }
+                foreach (var v in mf.sharedMesh.vertices) { float wy = m.MultiplyPoint3x4(v).y; if (wy < lowestY) lowestY = wy; }
             }
             foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 if (smr.sharedMesh == null) continue;
                 hasMesh = true;
                 float wy = smr.bounds.min.y;
-                if (wy < lowestWorldY) lowestWorldY = wy;
+                if (wy < lowestY) lowestY = wy;
             }
 
-            if (!hasMesh) lowestWorldY = go.transform.position.y;
+            if (!hasMesh) lowestY = go.transform.position.y;
+
+            RaycastHit hit = default;
+            bool didHit = false;
+            for (int i = 0; i < 10; i++)
+            {
+                float castY = go.transform.position.y + i * 0.5f;
+                Vector3 castOrigin = new Vector3(go.transform.position.x, castY, go.transform.position.z);
+                if (Physics.Raycast(castOrigin, Vector3.down, out hit, Mathf.Infinity)) { didHit = true; break; }
+            }
+
+            for (int i = 0; i < transforms.Length; i++) transforms[i].gameObject.layer = originalLayers[i];
+            if (!didHit) continue;
+
             Undo.RecordObject(go.transform, "Snap To Ground");
-            go.transform.position -= new Vector3(0f, lowestWorldY - hit.point.y, 0f);
+            go.transform.position -= new Vector3(0f, lowestY - hit.point.y, 0f);
+            snappedCount++;
         }
 
-        if (Selection.gameObjects.Length == 0) return;
-        EditorNotifier.Show($"Snapped to ground ({Selection.gameObjects.Length})");
+        if (snappedCount == 0) return;
+        EditorNotifier.Show($"Snapped to ground ({snappedCount})");
         PlaySound("Action");
     }
 
@@ -237,10 +278,12 @@ public static class EditorMethods
         if (Selection.gameObjects.Length == 0) return;
 
         Vector3 delta;
+        string dirLabel;
         if (vertical)
         {
             float step = 1f;
-            delta = key == KeyCode.UpArrow ? Vector3.up * step : Vector3.down * step;
+            if (key == KeyCode.UpArrow) { delta = Vector3.up * step; dirLabel = "Up"; }
+            else { delta = Vector3.down * step; dirLabel = "Down"; }
         }
         else
         {
@@ -252,13 +295,13 @@ public static class EditorMethods
             Vector3 fwd = cam != null ? Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized : Vector3.forward;
 
             float step = 1f;
-            delta = key switch
+            (delta, dirLabel) = key switch
             {
-                KeyCode.UpArrow => fwd * step,
-                KeyCode.DownArrow => -fwd * step,
-                KeyCode.RightArrow => right * step,
-                KeyCode.LeftArrow => -right * step,
-                _ => Vector3.zero
+                KeyCode.UpArrow => (fwd * step, "Forward"),
+                KeyCode.DownArrow => (-fwd * step, "Back"),
+                KeyCode.RightArrow => (right * step, "Right"),
+                KeyCode.LeftArrow => (-right * step, "Left"),
+                _ => (Vector3.zero, "")
             };
         }
 
@@ -269,7 +312,7 @@ public static class EditorMethods
             Undo.RecordObject(go.transform, "Move With Arrow");
             go.transform.position += delta;
         }
-        EditorNotifier.Show($"Moved {key} ({Selection.gameObjects.Length})");
+        EditorNotifier.Show($"Moved {dirLabel} ({Selection.gameObjects.Length})");
         PlaySound("Action");
     }
 
@@ -279,6 +322,7 @@ public static class EditorMethods
         var logEntries = Type.GetType("UnityEditor.LogEntries, UnityEditor");
         logEntries?.GetMethod("Clear", BindingFlags.Static | BindingFlags.Public)?.Invoke(null, null);
         EditorNotifier.Show("Console cleared");
+        PlaySound("Action");
     }
 
     public static void LoadSceneByIndex(KeyCode keyCode)

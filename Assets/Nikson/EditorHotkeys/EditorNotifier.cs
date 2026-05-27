@@ -35,6 +35,7 @@ public static class EditorNotifier
 
     public static void Show(string msg, float duration = 0)
     {
+        if (!EditorHotkeysSettingsProvider.Get().showNotifications) return;
         if (duration == 0) duration = defaultDuration;
         message = msg;
         endTime = (float)EditorApplication.timeSinceStartup + duration;
