@@ -42,11 +42,8 @@ namespace Nikson
             Vector2 localMouse = screenMouse - new Vector2(gameWin.position.x, gameWin.position.y);
 
             // Get the actual rendered game area via reflection to account for toolbar and letterboxing
-            var gameViewField = gameViewType.GetMethod("GetMainGameViewRenderRect",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            Rect renderRect = gameViewField != null
-                ? (Rect)gameViewField.Invoke(null, null)
-                : new Rect(0, 21, gameWin.position.width, gameWin.position.height - 21);
+            var gameViewField = gameViewType.GetMethod("GetMainGameViewRenderRect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Rect renderRect = gameViewField != null ? (Rect)gameViewField.Invoke(null, null) : new Rect(0, 21, gameWin.position.width, gameWin.position.height - 21);
 
             float viewX = (localMouse.x - renderRect.x) / renderRect.width;
             float viewY = 1f - (localMouse.y - renderRect.y) / renderRect.height;

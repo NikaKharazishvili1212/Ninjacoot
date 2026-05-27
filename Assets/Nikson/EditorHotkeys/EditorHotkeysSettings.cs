@@ -43,7 +43,7 @@ namespace Nikson
 
     public static class EditorHotkeysMenu
     {
-        const string MenuRoot = "Nikson/Editor Hotkeys/";
+        const string MenuRoot = "Tools/Nikson/Editor Hotkeys/";
 
         [MenuItem(MenuRoot + "Show Notifications", false, 1)]
         static void ToggleNotifications() { var s = EditorHotkeysSettingsProvider.Get(); s.showNotifications = !s.showNotifications; EditorUtility.SetDirty(s); }
