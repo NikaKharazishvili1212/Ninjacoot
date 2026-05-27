@@ -11,6 +11,19 @@ public static class EditorMethods
     static readonly Type gameViewType = typeof(Editor).Assembly.GetType("UnityEditor.GameView");
     static readonly PropertyInfo maximizedProp = typeof(EditorWindow).GetProperty("maximized", BindingFlags.Instance | BindingFlags.Public);
 
+    public static void PlaySound(string name)
+    {
+        if (!EditorHotkeysSettingsProvider.Get().playSounds) return;
+
+        string clipPath = $"{EditorHotkeysSettingsProvider.GetFolder()}/Sounds/{name}.wav";
+        var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+        if (clip == null) { Debug.LogWarning($"[EditorHotkeys] Sound not found: {clipPath}"); return; }
+
+        var audioUtilClass = typeof(AudioImporter).Assembly.GetType("UnityEditor.AudioUtil");
+        var method = audioUtilClass?.GetMethod("PlayPreviewClip", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(AudioClip), typeof(int), typeof(bool) }, null);
+        method?.Invoke(null, new object[] { clip, 0, false });
+    }
+
     public static void Deselect()
     {
         if (Selection.gameObjects.Length > 0) EditorNotifier.Show($"Deselected ({Selection.gameObjects.Length})");
@@ -51,6 +64,7 @@ public static class EditorMethods
             else Selection.activeGameObject = go;
 
             EditorNotifier.Show("Selected: " + go.name);
+            PlaySound("Action");
             break;
         }
     }
@@ -58,8 +72,9 @@ public static class EditorMethods
     public static void ToggleActive()
     {
         foreach (var go in Selection.gameObjects) { Undo.RecordObject(go, "Toggle Active"); go.SetActive(!go.activeSelf); }
-        if (Selection.gameObjects.Length > 0)
-            EditorNotifier.Show(Selection.gameObjects.Length == 1 ? (Selection.activeGameObject.activeSelf ? "Activated" : "Deactivated") : $"Toggled ({Selection.gameObjects.Length})");
+        if (Selection.gameObjects.Length == 0) return;
+        EditorNotifier.Show(Selection.gameObjects.Length == 1 ? (Selection.activeGameObject.activeSelf ? "Activated" : "Deactivated") : $"Toggled ({Selection.gameObjects.Length})");
+        PlaySound(Selection.activeGameObject.activeSelf ? "Activate" : "Deactivate");
     }
 
     public static void AlignCameraWithSceneView()
@@ -71,13 +86,15 @@ public static class EditorMethods
             Undo.RecordObject(mainCam.transform, "Align Camera With Scene View");
             mainCam.transform.SetPositionAndRotation(sceneCam.transform.position, sceneCam.transform.rotation);
             EditorNotifier.Show("Camera aligned with Scene view");
+            PlaySound("Action");
         }
     }
 
     public static void ToggleMuteAudio()
     {
         EditorUtility.audioMasterMute = !EditorUtility.audioMasterMute;
-        EditorNotifier.Show(EditorUtility.audioMasterMute ? "Audio Off" : "Audio On");
+        EditorNotifier.Show(EditorUtility.audioMasterMute ? "Audio On" : "Audio Off");
+        PlaySound(EditorUtility.audioMasterMute ? "Activate" : "Deactivate");
     }
 
     public static void ToggleStats()
@@ -89,6 +106,7 @@ public static class EditorMethods
         bool newValue = !(bool)statsField.GetValue(gameWins[0]);
         statsField.SetValue(gameWins[0], newValue);
         EditorNotifier.Show(newValue ? "Stats On" : "Stats Off");
+        PlaySound(newValue ? "Activate" : "Deactivate");
     }
 
     public static void ToggleGizmos()
@@ -110,18 +128,21 @@ public static class EditorMethods
             }
         }
         EditorNotifier.Show(newGizmosValue ? "Gizmos On" : "Gizmos Off");
+        PlaySound(newGizmosValue ? "Activate" : "Deactivate");
     }
 
     public static void StepFrame()
     {
         EditorApplication.Step();
         EditorNotifier.Show("Frame stepped");
+        PlaySound("Action");
     }
 
     public static void TogglePause()
     {
         EditorApplication.isPaused = !EditorApplication.isPaused;
-        EditorNotifier.Show(EditorApplication.isPaused ? "Paused" : "Resumed");
+        EditorNotifier.Show(!EditorApplication.isPaused ? "Resumed" : "Paused");
+        PlaySound(!EditorApplication.isPaused ? "Activate" : "Deactivate");
     }
 
     public static void TogglePlay()
@@ -205,8 +226,53 @@ public static class EditorMethods
             Undo.RecordObject(go.transform, "Snap To Ground");
             go.transform.position -= new Vector3(0f, lowestWorldY - hit.point.y, 0f);
         }
-        if (Selection.gameObjects.Length > 0) EditorNotifier.Show($"Snapped to ground ({Selection.gameObjects.Length})");
+
+        if (Selection.gameObjects.Length == 0) return;
+        EditorNotifier.Show($"Snapped to ground ({Selection.gameObjects.Length})");
+        PlaySound("Action");
     }
+
+    public static void MoveWithArrow(KeyCode key, bool vertical = false)
+    {
+        if (Selection.gameObjects.Length == 0) return;
+
+        Vector3 delta;
+        if (vertical)
+        {
+            float step = 1f;
+            delta = key == KeyCode.UpArrow ? Vector3.up * step : Vector3.down * step;
+        }
+        else
+        {
+            var gameViewCam = Camera.main;
+            bool mouseOverGame = EditorWindow.mouseOverWindow?.GetType() == gameViewType;
+            Camera cam = (mouseOverGame && gameViewCam != null) ? gameViewCam : SceneView.lastActiveSceneView?.camera;
+
+            Vector3 right = cam != null ? Vector3.ProjectOnPlane(cam.transform.right, Vector3.up).normalized : Vector3.right;
+            Vector3 fwd = cam != null ? Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized : Vector3.forward;
+
+            float step = 1f;
+            delta = key switch
+            {
+                KeyCode.UpArrow => fwd * step,
+                KeyCode.DownArrow => -fwd * step,
+                KeyCode.RightArrow => right * step,
+                KeyCode.LeftArrow => -right * step,
+                _ => Vector3.zero
+            };
+        }
+
+        if (delta == Vector3.zero) return;
+
+        foreach (var go in Selection.gameObjects)
+        {
+            Undo.RecordObject(go.transform, "Move With Arrow");
+            go.transform.position += delta;
+        }
+        EditorNotifier.Show($"Moved {key} ({Selection.gameObjects.Length})");
+        PlaySound("Action");
+    }
+
 
     public static void ClearConsole()
     {
