@@ -3,66 +3,68 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 
-public class EditorHotkeysSettings : ScriptableObject
+namespace Nikson
 {
-    [HideInInspector] public bool showNotifications = true;
-    [HideInInspector] public bool playSounds = true;
-}
-
-public static class EditorHotkeysSettingsProvider
-{
-    private static EditorHotkeysSettings cached;
-
-    public static EditorHotkeysSettings Get()
+    public class EditorHotkeysSettings : ScriptableObject
     {
-        if (cached != null) return cached;
-
-        string folder = GetFolder();
-        string path = folder + "/EditorHotkeysSettings.asset";
-
-        cached = AssetDatabase.LoadAssetAtPath<EditorHotkeysSettings>(path);
-        if (cached != null) return cached;
-
-        cached = ScriptableObject.CreateInstance<EditorHotkeysSettings>();
-        Directory.CreateDirectory(folder);
-        AssetDatabase.CreateAsset(cached, path);
-        AssetDatabase.SaveAssets();
-        return cached;
+        [HideInInspector] public bool showNotifications = true;
+        [HideInInspector] public bool playSounds = true;
     }
 
-    public static string GetFolder()
+    public static class EditorHotkeysSettingsProvider
     {
-        var guids = AssetDatabase.FindAssets("EditorHotkeysSettings t:Script");
-        if (guids.Length == 0) return "Assets/Nikson/EditorHotkeys";
-        string scriptPath = AssetDatabase.GUIDToAssetPath(guids[0]);
-        return Path.GetDirectoryName(scriptPath).Replace("\\", "/");
+        private static EditorHotkeysSettings cached;
+
+        public static EditorHotkeysSettings Get()
+        {
+            if (cached != null) return cached;
+
+            string folder = GetFolder();
+            string path = folder + "/EditorHotkeysSettings.asset";
+
+            cached = AssetDatabase.LoadAssetAtPath<EditorHotkeysSettings>(path);
+            if (cached != null) return cached;
+
+            cached = ScriptableObject.CreateInstance<EditorHotkeysSettings>();
+            Directory.CreateDirectory(folder);
+            AssetDatabase.CreateAsset(cached, path);
+            AssetDatabase.SaveAssets();
+            return cached;
+        }
+
+        public static string GetFolder()
+        {
+            var guids = AssetDatabase.FindAssets("EditorHotkeysSettings t:Script");
+            if (guids.Length == 0) return "Assets/Nikson/EditorHotkeys";
+            string scriptPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return Path.GetDirectoryName(scriptPath).Replace("\\", "/");
+        }
     }
-}
 
-public static class EditorHotkeysMenu
-{
-    const string MenuRoot = "Nikson/Editor Hotkeys/";
-
-    [MenuItem(MenuRoot + "Show Notifications", false, 1)]
-    static void ToggleNotifications() { var s = EditorHotkeysSettingsProvider.Get(); s.showNotifications = !s.showNotifications; EditorUtility.SetDirty(s); }
-
-    [MenuItem(MenuRoot + "Show Notifications", true)]
-    static bool ToggleNotificationsValidate() { Menu.SetChecked(MenuRoot + "Show Notifications", EditorHotkeysSettingsProvider.Get().showNotifications); return true; }
-
-    [MenuItem(MenuRoot + "Play Sound Effects", false, 2)]
-    static void ToggleSounds() { var s = EditorHotkeysSettingsProvider.Get(); s.playSounds = !s.playSounds; EditorUtility.SetDirty(s); }
-
-    [MenuItem(MenuRoot + "Play Sound Effects", true)]
-    static bool ToggleSoundsValidate() { Menu.SetChecked(MenuRoot + "Play Sound Effects", EditorHotkeysSettingsProvider.Get().playSounds); return true; }
-
-    [MenuItem(MenuRoot + "Hotkeys Reference", false, 50)]
-    static void OpenHotkeysReference() => HotkeysReferenceWindow.Open();
-}
-
-public class HotkeysReferenceWindow : EditorWindow
-{
-    static readonly (string key, string action)[] lines =
+    public static class EditorHotkeysMenu
     {
+        const string MenuRoot = "Nikson/Editor Hotkeys/";
+
+        [MenuItem(MenuRoot + "Show Notifications", false, 1)]
+        static void ToggleNotifications() { var s = EditorHotkeysSettingsProvider.Get(); s.showNotifications = !s.showNotifications; EditorUtility.SetDirty(s); }
+
+        [MenuItem(MenuRoot + "Show Notifications", true)]
+        static bool ToggleNotificationsValidate() { Menu.SetChecked(MenuRoot + "Show Notifications", EditorHotkeysSettingsProvider.Get().showNotifications); return true; }
+
+        [MenuItem(MenuRoot + "Play Sound Effects", false, 2)]
+        static void ToggleSounds() { var s = EditorHotkeysSettingsProvider.Get(); s.playSounds = !s.playSounds; EditorUtility.SetDirty(s); }
+
+        [MenuItem(MenuRoot + "Play Sound Effects", true)]
+        static bool ToggleSoundsValidate() { Menu.SetChecked(MenuRoot + "Play Sound Effects", EditorHotkeysSettingsProvider.Get().playSounds); return true; }
+
+        [MenuItem(MenuRoot + "Hotkeys Reference", false, 50)]
+        static void OpenHotkeysReference() => HotkeysReferenceWindow.Open();
+    }
+
+    public class HotkeysReferenceWindow : EditorWindow
+    {
+        static readonly (string key, string action)[] lines =
+        {
         ("` + LMB",                 "—  Select Object Under Cursor (Play Mode)"),
         ("` + Shift + LMB",         "—  Select Multiple Objects Under Cursor (Play Mode)"),
         ("Esc",                     "—  Deselect"),
@@ -89,27 +91,28 @@ public class HotkeysReferenceWindow : EditorWindow
         ("F12",                     "—  Focus Scene View"),
     };
 
-    Vector2 scroll;
+        Vector2 scroll;
 
-    public static void Open()
-    {
-        var win = GetWindow<HotkeysReferenceWindow>(true, "Hotkeys Reference", true);
-        win.minSize = new Vector2(505, 482);
-        win.maxSize = new Vector2(505, 482);
-    }
-
-    void OnGUI()
-    {
-        scroll = EditorGUILayout.BeginScrollView(scroll);
-        foreach (var (key, action) in lines)
+        public static void Open()
         {
-            if (string.IsNullOrEmpty(key)) { EditorGUILayout.Space(4); continue; }
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(key, GUILayout.Width(140));
-            EditorGUILayout.LabelField(action);
-            EditorGUILayout.EndHorizontal();
+            var win = GetWindow<HotkeysReferenceWindow>(true, "Hotkeys Reference", true);
+            win.minSize = new Vector2(505, 482);
+            win.maxSize = new Vector2(505, 482);
         }
-        EditorGUILayout.EndScrollView();
+
+        void OnGUI()
+        {
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            foreach (var (key, action) in lines)
+            {
+                if (string.IsNullOrEmpty(key)) { EditorGUILayout.Space(4); continue; }
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(key, GUILayout.Width(140));
+                EditorGUILayout.LabelField(action);
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndScrollView();
+        }
     }
 }
 #endif
