@@ -41,8 +41,7 @@ namespace Nikson
             Vector2 screenMouse = GUIUtility.GUIToScreenPoint(e.mousePosition);
             Vector2 localMouse = screenMouse - new Vector2(gameWin.position.x, gameWin.position.y);
 
-            // Get the actual rendered game area via reflection to account for toolbar and letterboxing
-            var gameViewField = gameViewType.GetMethod("GetMainGameViewRenderRect", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var gameViewField = gameViewType.GetMethod("GetMainGameViewRenderRect", BindingFlags.NonPublic | BindingFlags.Static);
             Rect renderRect = gameViewField != null ? (Rect)gameViewField.Invoke(null, null) : new Rect(0, 21, gameWin.position.width, gameWin.position.height - 21);
 
             float viewX = (localMouse.x - renderRect.x) / renderRect.width;
@@ -61,13 +60,9 @@ namespace Nikson
                 if (go.GetComponent<Terrain>() != null) continue;
                 if (go.GetComponentInChildren<MeshFilter>() == null && go.GetComponentInChildren<SkinnedMeshRenderer>() == null) continue;
 
-                if (e.shift)
-                {
-                    var current = new List<GameObject>(Selection.gameObjects);
-                    if (!current.Contains(go)) current.Add(go);
-                    Selection.objects = current.ToArray();
-                }
-                else Selection.activeGameObject = go;
+                var current = new List<GameObject>(Selection.gameObjects);
+                if (!current.Contains(go)) current.Add(go);
+                Selection.objects = current.ToArray();
 
                 EditorNotifier.Show("Selected: " + go.name);
                 PlaySound("Action");

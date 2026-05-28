@@ -8,8 +8,6 @@ namespace Nikson
     [InitializeOnLoad]
     public static class EditorHotkeys
     {
-        static bool backquoteHeld;
-
         static EditorHotkeys()
         {
             var globalEventHandler = typeof(EditorApplication).GetField("globalEventHandler", BindingFlags.Static | BindingFlags.NonPublic);
@@ -20,6 +18,8 @@ namespace Nikson
             }
             else Debug.LogWarning("[EditorHotkeys] Could not hook globalEventHandler.");
         }
+
+        static bool backquoteHeld;
 
         static void OnGlobalEvent()
         {
@@ -32,7 +32,13 @@ namespace Nikson
                 else if (e.type == EventType.KeyUp) backquoteHeld = false;
             }
 
-            if (backquoteHeld && e.type == EventType.MouseDown && e.button == 0 && EditorApplication.isPlaying) { EditorMethods.SelectUnderCursor(e); e.Use(); return; }
+            // Shift + LMB — multi-select under cursor (play mode)
+            if (e.shift && e.type == EventType.MouseDown && e.button == 0 && EditorApplication.isPlaying)
+            {
+                EditorMethods.SelectUnderCursor(e);
+                e.Use();
+                return;
+            }
 
             if (e.type != EventType.KeyDown) return;
 
@@ -46,18 +52,23 @@ namespace Nikson
             if (e.keyCode == KeyCode.F11) { EditorMethods.TogglePlayOrFocusGameView(); e.Use(); return; }
             if (e.keyCode == KeyCode.F12) { EditorMethods.ToggleSceneView(); e.Use(); return; }
 
-            if (!backquoteHeld) return;
-            if (e.keyCode == KeyCode.S) { EditorMethods.SavePlayModeState(); e.Use(); return; }
+            if (!e.shift) return;
+
+            if (e.keyCode == KeyCode.S && backquoteHeld) { EditorMethods.SavePlayModeState(); e.Use(); return; }
             if (e.keyCode == KeyCode.R) { EditorMethods.ResetTransform(); e.Use(); return; }
             if (e.keyCode == KeyCode.T) { EditorMethods.ToggleActive(); e.Use(); return; }
             if (e.keyCode == KeyCode.G) { EditorMethods.SnapToGround(); e.Use(); return; }
-            if (e.keyCode == KeyCode.UpArrow) { EditorMethods.MoveWithArrow(KeyCode.UpArrow, e.shift); e.Use(); return; }
-            if (e.keyCode == KeyCode.DownArrow) { EditorMethods.MoveWithArrow(KeyCode.DownArrow, e.shift); e.Use(); return; }
-            if (e.keyCode == KeyCode.RightArrow) { EditorMethods.MoveWithArrow(KeyCode.RightArrow, false); e.Use(); return; }
-            if (e.keyCode == KeyCode.LeftArrow) { EditorMethods.MoveWithArrow(KeyCode.LeftArrow, false); e.Use(); return; }
             if (e.keyCode == KeyCode.C) { EditorMethods.ClearConsole(); e.Use(); return; }
 
-            if (e.shift) { EditorMethods.LoadSceneByIndex(e.keyCode); e.Use(); return; }
+            // Shift + Arrow Keys — move relative to camera | LShift + ` + Up/Down — move up/down
+            if (e.keyCode == KeyCode.UpArrow) { EditorMethods.MoveWithArrow(KeyCode.UpArrow, backquoteHeld); e.Use(); return; }
+            if (e.keyCode == KeyCode.DownArrow) { EditorMethods.MoveWithArrow(KeyCode.DownArrow, backquoteHeld); e.Use(); return; }
+            if (e.keyCode == KeyCode.RightArrow) { EditorMethods.MoveWithArrow(KeyCode.RightArrow, false); e.Use(); return; }
+            if (e.keyCode == KeyCode.LeftArrow) { EditorMethods.MoveWithArrow(KeyCode.LeftArrow, false); e.Use(); return; }
+
+            // Shift + 1-9 — load scene by index
+            EditorMethods.LoadSceneByIndex(e.keyCode);
+            e.Use();
         }
     }
 }

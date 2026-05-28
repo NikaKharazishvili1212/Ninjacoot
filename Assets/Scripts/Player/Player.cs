@@ -44,18 +44,18 @@ public partial class Player : MonoBehaviour
     }
 
     // isualizes shuriken detection radius and angle in Scene view
-    void OnDrawGizmosSelected()
-    {
-        Vector3 origin = transform.position + Vector3.up;
-        Vector3 flatForward = new Vector3(transform.forward.x, 0, transform.forward.z).normalized;
-        Vector3 leftBoundary = Quaternion.Euler(0, -ShurikenDetectionAngle, 0) * flatForward * ShurikenDetectionRadius;
-        Vector3 rightBoundary = Quaternion.Euler(0, ShurikenDetectionAngle, 0) * flatForward * ShurikenDetectionRadius;
+    // void OnDrawGizmosSelected()
+    // {
+    //     Vector3 origin = transform.position + Vector3.up;
+    //     Vector3 flatForward = new Vector3(transform.forward.x, 0, transform.forward.z).normalized;
+    //     Vector3 leftBoundary = Quaternion.Euler(0, -ShurikenDetectionAngle, 0) * flatForward * ShurikenDetectionRadius;
+    //     Vector3 rightBoundary = Quaternion.Euler(0, ShurikenDetectionAngle, 0) * flatForward * ShurikenDetectionRadius;
 
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(origin, ShurikenDetectionRadius);
-        Gizmos.DrawLine(origin, origin + leftBoundary);
-        Gizmos.DrawLine(origin, origin + rightBoundary);
-    }
+    //     Gizmos.color = Color.green;
+    //     Gizmos.DrawWireSphere(origin, ShurikenDetectionRadius);
+    //     Gizmos.DrawLine(origin, origin + leftBoundary);
+    //     Gizmos.DrawLine(origin, origin + rightBoundary);
+    // }
 
     void UpdateStates()
     {

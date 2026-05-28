@@ -65,39 +65,38 @@ namespace Nikson
     {
         static readonly (string key, string action)[] lines =
         {
-        ("` + LMB",                 "—  Select Object Under Cursor (Play Mode)"),
-        ("` + Shift + LMB",         "—  Select Multiple Objects Under Cursor (Play Mode)"),
-        ("Esc",                     "—  Deselect"),
-        ("\n",                      ""),
-        ("` + S",                   "—  Save Play Mode State (Restored On Exit)"),
-        ("` + R",                   "—  Reset Transform / RectTransform"),
-        ("` + T",                   "—  Toggle Active"),
-        ("\n",                      ""),
-        ("` + G",                   "—  Snap To Ground"),
-        ("` + Arrow Keys",          "—  Move Relative To Camera"),
-        ("` + Shift + Up / Down",   "—  Move Up / Down"),
-        ("\n",                      ""),
-        ("` + C",                   "—  Clear Console"),
-        ("` + Shift + 1–9",         "—  Load Scene By Index"),
-        ("\n",                      ""),
-        ("F5",                      "—  Align Camera With Scene View"),
-        ("F6",                      "—  Toggle Mute Audio"),
-        ("F7",                      "—  Toggle Stats"),
-        ("F8",                      "—  Toggle Gizmos"),
-        ("\n",                      ""),
-        ("F9",                      "—  Step Frame"),
-        ("F10",                     "—  Toggle Pause"),
-        ("F11",                     "—  Game View: Toggle Play | Scene View: Focus Game View"),
-        ("F12",                     "—  Focus Scene View"),
-    };
+            ("Shift + LMB",             "—  Select Objects Under Cursor (Play Mode)"),
+            ("Esc",                     "—  Deselect"),
+            ("\n",                      ""),
+            ("Shift + ` + S",           "—  Save Play Mode State (Restored On Exit)"),
+            ("Shift + R",               "—  Reset Transform / RectTransform"),
+            ("Shift + T",               "—  Toggle Active"),
+            ("\n",                      ""),
+            ("Shift + G",               "—  Snap To Ground"),
+            ("Shift + Arrow Keys",      "—  Move Relative To Camera"),
+            ("Shift + ` + Up / Down",   "—  Move Up / Down"),
+            ("\n",                      ""),
+            ("Shift + C",               "—  Clear Console"),
+            ("Shift + 1–9",             "—  Load Scene By Index"),
+            ("\n",                      ""),
+            ("F5",                      "—  Align Camera With Scene View"),
+            ("F6",                      "—  Toggle Mute Audio"),
+            ("F7",                      "—  Toggle Stats"),
+            ("F8",                      "—  Toggle Gizmos"),
+            ("\n",                      ""),
+            ("F9",                      "—  Step Frame"),
+            ("F10",                     "—  Toggle Pause"),
+            ("F11",                     "—  Game View: Toggle Play | Scene View: Focus Game View"),
+            ("F12",                     "—  Focus Scene View"),
+        };
 
         Vector2 scroll;
 
         public static void Open()
         {
             var win = GetWindow<HotkeysReferenceWindow>(true, "Hotkeys Reference", true);
-            win.minSize = new Vector2(505, 482);
-            win.maxSize = new Vector2(505, 482);
+            win.minSize = new Vector2(502, 465);
+            win.maxSize = new Vector2(502, 465);
         }
 
         void OnGUI()
