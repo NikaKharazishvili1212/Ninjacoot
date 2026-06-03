@@ -83,7 +83,7 @@ namespace Nikson
             EditorGUILayout.Space();
 
             GUI.enabled = ParentObject != null;
-            if (GUILayout.Button("Map Meshes To Atlas", GUILayout.Height(30))) Generate();
+            if (GUILayout.Button("Generate", GUILayout.Height(30))) Generate();
             GUI.enabled = true;
         }
 
