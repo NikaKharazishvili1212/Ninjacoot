@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
+using static Nikson.OptimizationHub;
 
 namespace Nikson
 {
@@ -9,11 +10,20 @@ namespace Nikson
     {
         Canvas canvas;
 
-        [MenuItem("Tools/Nikson/Optimization/6. Canvas Analyzer")]
-        static void ShowWindow() => GetWindow<CanvasAnalyzer>("Canvas Analyzer");
+        public void DrawGUI() => OnGUI();
 
         void OnGUI()
         {
+            EditorGUILayout.LabelField(
+                "Unity rebuilds the entire Canvas mesh whenever any Graphic component on it changes. " +
+                "The more Graphic components a Canvas has, the more expensive that rebuild is.\n\n" +
+                "This tool counts all Graphic components (Image, Text, RawImage, etc.) on the selected Canvas " +
+                "and tells you whether it is safe for frequent updates, or whether you should split it " +
+                "into smaller canvases to avoid performance issues.",
+                NiksonStyle);
+
+            EditorGUILayout.Space();
+
             canvas = (Canvas)EditorGUILayout.ObjectField("Canvas", canvas, typeof(Canvas), true);
 
             EditorGUILayout.Space();

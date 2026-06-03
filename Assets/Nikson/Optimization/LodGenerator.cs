@@ -1,168 +1,130 @@
-// #if UNITY_EDITOR
-// using UnityEngine;
-// using UnityEditor;
-// using System.IO;
+#if UNITY_EDITOR
+using UnityEngine;
+using UnityEditor;
+using System.IO;
+using static Nikson.OptimizationHub;
 
-// namespace Nikson
-// {
-//     public class LodGenerator : EditorWindow
-//     {
-//         const string PREF_SAVE_PATH = "Nikson_LodGenerator_SavePath";
-//         const string PREF_LOD0 = "Nikson_LodGenerator_Lod0";
-//         const string PREF_LOD1 = "Nikson_LodGenerator_Lod1";
-//         const string PREF_LOD2 = "Nikson_LodGenerator_Lod2";
+namespace Nikson
+{
+    public class LodGenerator : EditorWindow
+    {
+        public void DrawGUI() => OnGUI();
 
-//         GameObject parentObject;
-//         string savePath;
-//         int lod0Percent;
-//         int lod1Percent;
-//         int lod2Percent;
+        void OnGUI()
+        {
+            EditorGUILayout.LabelField(
+                "Select a GameObject containing a mesh and click \"Generate\" to automatically create a LOD Group with three levels of detail.\n\n" +
+                "Each LOD level is saved as a separate mesh asset. The original mesh becomes LOD0.",
+                NiksonStyle);
 
-//         [MenuItem("Tools/Nikson/Optimization/7. LOD Generator")]
-//         public static void ShowWindow() => GetWindow<LodGenerator>("LOD Generator");
+            EditorGUILayout.Space();
 
-//         void OnEnable()
-//         {
-//             savePath = EditorPrefs.GetString(PREF_SAVE_PATH, "Assets/Nikson/Generated/");
-//             lod0Percent = EditorPrefs.GetInt(PREF_LOD0, 70);
-//             lod1Percent = EditorPrefs.GetInt(PREF_LOD1, 50);
-//             lod2Percent = EditorPrefs.GetInt(PREF_LOD2, 30);
-//         }
+            ParentObject = (GameObject)EditorGUILayout.ObjectField("Parent Object", ParentObject, typeof(GameObject), true);
 
-//         void OnGUI()
-//         {
-//             EditorGUILayout.HelpBox(
-//                 "\nSelect a GameObject containing a mesh and click \"Generate\" to automatically create a LOD Group with three levels of detail.\n\n" +
-//                 "Each LOD level is saved as a separate mesh asset. The original mesh becomes LOD0.\n",
-//                 MessageType.Info);
+            EditorGUILayout.BeginHorizontal();
+            SavePath = EditorGUILayout.TextField("Save Path", SavePath);
+            if (GUILayout.Button("Browse", GUILayout.Width(60)))
+            {
+                string selected = EditorUtility.OpenFolderPanel("Select Save Folder", "Assets", "");
+                if (!string.IsNullOrEmpty(selected))
+                {
+                    if (selected.StartsWith(Application.dataPath)) SavePath = "Assets" + selected.Substring(Application.dataPath.Length);
+                    else Debug.LogWarning("Selected folder must be inside the project's Assets folder.");
+                }
+            }
+            EditorGUILayout.EndHorizontal();
 
-//             parentObject = (GameObject)EditorGUILayout.ObjectField("Parent Object", parentObject, typeof(GameObject), true);
+            Lod0Percent = EditorGUILayout.IntSlider("LOD0 Quality %", Lod0Percent, 1, 100);
+            Lod1Percent = EditorGUILayout.IntSlider("LOD1 Quality %", Lod1Percent, 1, 100);
+            Lod2Percent = EditorGUILayout.IntSlider("LOD2 Quality %", Lod2Percent, 1, 100);
 
-//             EditorGUI.BeginChangeCheck();
+            EditorGUILayout.Space();
 
-//             EditorGUILayout.BeginHorizontal();
-//             savePath = EditorGUILayout.TextField("Save Path", savePath);
-//             if (GUILayout.Button("Browse", GUILayout.Width(60)))
-//             {
-//                 string selected = EditorUtility.OpenFolderPanel("Select Save Folder", "Assets", "");
-//                 if (!string.IsNullOrEmpty(selected))
-//                 {
-//                     if (selected.StartsWith(Application.dataPath))
-//                         savePath = "Assets" + selected.Substring(Application.dataPath.Length);
-//                     else
-//                         Debug.LogWarning("Selected folder must be inside the project's Assets folder.");
-//                 }
-//             }
-//             EditorGUILayout.EndHorizontal();
+            GUI.enabled = ParentObject != null;
+            if (GUILayout.Button("Generate", GUILayout.Height(30))) Generate();
+            GUI.enabled = true;
+        }
 
-//             lod0Percent = EditorGUILayout.IntSlider("LOD0 Quality %", lod0Percent, 1, 100);
-//             lod1Percent = EditorGUILayout.IntSlider("LOD1 Quality %", lod1Percent, 1, 100);
-//             lod2Percent = EditorGUILayout.IntSlider("LOD2 Quality %", lod2Percent, 1, 100);
+        void Generate()
+        {
+            var meshFilter = ParentObject.GetComponentInChildren<MeshFilter>();
+            var skinnedRenderer = ParentObject.GetComponentInChildren<SkinnedMeshRenderer>();
 
-//             if (EditorGUI.EndChangeCheck())
-//             {
-//                 EditorPrefs.SetString(PREF_SAVE_PATH, savePath);
-//                 EditorPrefs.SetInt(PREF_LOD0, lod0Percent);
-//                 EditorPrefs.SetInt(PREF_LOD1, lod1Percent);
-//                 EditorPrefs.SetInt(PREF_LOD2, lod2Percent);
-//             }
+            Mesh originalMesh = null;
+            if (meshFilter != null) originalMesh = meshFilter.sharedMesh;
+            else if (skinnedRenderer != null) originalMesh = skinnedRenderer.sharedMesh;
 
-//             EditorGUILayout.Space();
+            if (originalMesh == null)
+            {
+                Debug.LogError("No mesh found on the selected GameObject!");
+                return;
+            }
 
-//             GUI.enabled = parentObject != null;
-//             if (GUILayout.Button("Generate", GUILayout.Height(30))) Generate();
-//             GUI.enabled = true;
-//         }
+            string normalizedPath = SavePath.Replace("\\", "/");
+            if (!normalizedPath.EndsWith("/")) normalizedPath += "/";
+            if (!Directory.Exists(normalizedPath))
+            {
+                Directory.CreateDirectory(normalizedPath);
+                AssetDatabase.Refresh();
+            }
 
-//         void Generate()
-//         {
-//             var meshFilter = parentObject.GetComponentInChildren<MeshFilter>();
-//             var skinnedRenderer = parentObject.GetComponentInChildren<SkinnedMeshRenderer>();
+            Mesh[] lodMeshes = new Mesh[3];
+            int[] percents = { Lod0Percent, Lod1Percent, Lod2Percent };
 
-//             Mesh originalMesh = null;
-//             if (meshFilter != null) originalMesh = meshFilter.sharedMesh;
-//             else if (skinnedRenderer != null) originalMesh = skinnedRenderer.sharedMesh;
+            for (int i = 0; i < 3; i++)
+            {
+                float quality = Mathf.Clamp01(percents[i] / 100f);
+                var simplifier = new UnityMeshSimplifier();
+                simplifier.Initialize(originalMesh);
+                simplifier.SimplifyMesh(quality);
+                lodMeshes[i] = simplifier.ToMesh();
 
-//             if (originalMesh == null)
-//             {
-//                 Debug.LogError("No mesh found on the selected GameObject!");
-//                 return;
-//             }
+                string meshPath = GetUniquePath(normalizedPath, $"{originalMesh.name}_LOD{i}", ".asset");
+                lodMeshes[i].name = Path.GetFileNameWithoutExtension(meshPath);
+                AssetDatabase.CreateAsset(lodMeshes[i], meshPath);
+            }
 
-//             string normalizedPath = savePath.Replace("\\", "/");
-//             if (!normalizedPath.EndsWith("/")) normalizedPath += "/";
-//             if (!Directory.Exists(normalizedPath))
-//             {
-//                 Directory.CreateDirectory(normalizedPath);
-//                 AssetDatabase.Refresh();
-//             }
+            AssetDatabase.SaveAssets();
 
-//             Mesh[] lodMeshes = new Mesh[3];
-//             int[] percents = { lod0Percent, lod1Percent, lod2Percent };
+            // Remove existing LODGroup if any
+            LODGroup existingGroup = ParentObject.GetComponent<LODGroup>();
+            if (existingGroup != null) Undo.DestroyObjectImmediate(existingGroup);
 
-//             for (int i = 0; i < 3; i++)
-//             {
-//                 float quality = Mathf.Clamp01(percents[i] / 100f);
-//                 var simplifier = new UnityMeshSimplifier();
-//                 simplifier.Initialize(originalMesh);
-//                 simplifier.SimplifyMesh(quality);
-//                 lodMeshes[i] = simplifier.ToMesh();
+            LODGroup lodGroup = Undo.AddComponent<LODGroup>(ParentObject);
 
-//                 string meshPath = GetUniquePath(normalizedPath, $"{originalMesh.name}_LOD{i}", ".asset");
-//                 lodMeshes[i].name = Path.GetFileNameWithoutExtension(meshPath);
-//                 AssetDatabase.CreateAsset(lodMeshes[i], meshPath);
-//             }
+            MeshRenderer renderer = ParentObject.GetComponentInChildren<MeshRenderer>();
 
-//             AssetDatabase.SaveAssets();
+            UnityEngine.LOD[] lods = new UnityEngine.LOD[4];
 
-//             // Remove existing LODGroup if any
-//             LODGroup existingGroup = parentObject.GetComponent<LODGroup>();
-//             if (existingGroup != null) Undo.DestroyObjectImmediate(existingGroup);
+            lods[0].screenRelativeTransitionHeight = 0.6f;
+            lods[0].renderers = renderer != null ? new Renderer[] { renderer } : new Renderer[0];
 
-//             LODGroup lodGroup = Undo.AddComponent<LODGroup>(parentObject);
+            float[] screenTransitions = { 0.3f, 0.15f, 0.05f };
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject lodObj = new GameObject($"LOD{i + 1}");
+                Undo.RegisterCreatedObjectUndo(lodObj, "Create LOD");
+                lodObj.transform.SetParent(ParentObject.transform);
+                lodObj.transform.localPosition = Vector3.zero;
+                lodObj.transform.localRotation = Quaternion.identity;
+                lodObj.transform.localScale = Vector3.one;
 
-//             MeshRenderer renderer = parentObject.GetComponentInChildren<MeshRenderer>();
+                MeshFilter lf = lodObj.AddComponent<MeshFilter>();
+                lf.sharedMesh = lodMeshes[i];
 
-//             LOD[] lods = new LOD[4];
+                MeshRenderer lr = lodObj.AddComponent<MeshRenderer>();
+                if (renderer != null) lr.sharedMaterials = renderer.sharedMaterials;
 
-//             // LOD0 uses original mesh
-//             lods[0] = new LOD(0.6f, renderer != null ? new Renderer[] { renderer } : new Renderer[0]);
+                lods[i + 1].screenRelativeTransitionHeight = screenTransitions[i];
+                lods[i + 1].renderers = new Renderer[] { lr };
+            }
 
-//             // LOD1, LOD2, LOD3 use simplified meshes
-//             float[] screenTransitions = { 0.3f, 0.15f, 0.05f };
-//             for (int i = 0; i < 3; i++)
-//             {
-//                 GameObject lodObj = new GameObject($"LOD{i + 1}");
-//                 Undo.RegisterCreatedObjectUndo(lodObj, "Create LOD");
-//                 lodObj.transform.SetParent(parentObject.transform);
-//                 lodObj.transform.localPosition = Vector3.zero;
-//                 lodObj.transform.localRotation = Quaternion.identity;
-//                 lodObj.transform.localScale = Vector3.one;
+            lodGroup.SetLODs(lods);
+            lodGroup.RecalculateBounds();
 
-//                 MeshFilter lf = lodObj.AddComponent<MeshFilter>();
-//                 lf.sharedMesh = lodMeshes[i];
-
-//                 MeshRenderer lr = lodObj.AddComponent<MeshRenderer>();
-//                 if (renderer != null) lr.sharedMaterials = renderer.sharedMaterials;
-
-//                 lods[i + 1] = new LOD(screenTransitions[i], new Renderer[] { lr });
-//             }
-
-//             lodGroup.SetLODs(lods);
-//             lodGroup.RecalculateBounds();
-
-//             Debug.Log($"Created LOD Group on {parentObject.name}   |   LOD0: {lod0Percent}%   LOD1: {lod1Percent}%   LOD2: {lod2Percent}%");
-//             EditorUtility.SetDirty(parentObject);
-//         }
-
-//         string GetUniquePath(string folder, string name, string ext)
-//         {
-//             string path = Path.Combine(folder, name + ext);
-//             int n = 1;
-//             while (File.Exists(path) || AssetDatabase.LoadAssetAtPath<Object>(path) != null)
-//                 path = Path.Combine(folder, name + n++ + ext);
-//             return path;
-//         }
-//     }
-// }
-// #endif
+            Debug.Log($"Created LOD Group on {ParentObject.name}   |   LOD0: {Lod0Percent}%   LOD1: {Lod1Percent}%   LOD2: {Lod2Percent}%");
+            EditorUtility.SetDirty(ParentObject);
+        }
+    }
+}
+#endif

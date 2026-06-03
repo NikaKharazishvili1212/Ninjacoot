@@ -4,25 +4,12 @@ using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using static Nikson.OptimizationHub;
 
 namespace Nikson
 {
     public class MeshUvAtlasMapper : EditorWindow
     {
-        const string ATLAS_NAME = "Atlas";
-        const int MAX_ATLAS_SIZE = 4096;
-
-        const string PREF_SAVE_PATH = "Nikson_MeshUvAtlasMapper_SavePath";
-        const string PREF_RESIZE = "Nikson_MeshUvAtlasMapper_Resize";
-        const string PREF_TARGET_WIDTH = "Nikson_MeshUvAtlasMapper_Width";
-        const string PREF_TARGET_HEIGHT = "Nikson_MeshUvAtlasMapper_Height";
-        const string PREF_APPLY = "Nikson_MeshUvAtlasMapper_Apply";
-
-        GameObject parentObject;
-        string savePath;
-        bool resizeTextures;
-        Vector2Int targetTextureSize;
-        bool applyToObjects;
         Dictionary<MeshTextureKey, Rect> uvMappings = new Dictionary<MeshTextureKey, Rect>();
 
         // Key to track unique mesh + texture combinations
@@ -48,81 +35,62 @@ namespace Nikson
             public override int GetHashCode() => (mesh?.GetHashCode() ?? 0) ^ (texture?.GetHashCode() ?? 0);
         }
 
-        [MenuItem("Tools/Nikson/Optimization/5. Mesh Uv Atlas Mapper")]
-        public static void ShowWindow() => GetWindow<MeshUvAtlasMapper>("Mesh Uv Atlas Mapper");
-
-        void OnEnable()
-        {
-            savePath = EditorPrefs.GetString(PREF_SAVE_PATH, "Assets/Nikson/Optimization/Generated/");
-            resizeTextures = EditorPrefs.GetBool(PREF_RESIZE, false);
-            targetTextureSize = new Vector2Int(EditorPrefs.GetInt(PREF_TARGET_WIDTH, 512), EditorPrefs.GetInt(PREF_TARGET_HEIGHT, 512));
-            applyToObjects = EditorPrefs.GetBool(PREF_APPLY, true);
-        }
+        public void DrawGUI() => OnGUI();
 
         void OnGUI()
         {
-            EditorGUILayout.HelpBox(
-                "\nSelect the parent GameObject containing the meshes you want to remap to a shared texture atlas. " +
+            EditorGUILayout.LabelField(
+                "Select the parent GameObject containing the meshes you want to remap to a shared texture atlas. " +
                 "Each mesh keeps its own identity — UVs are remapped per-object rather than combined into one mesh.\n\n" +
-                "If a file with the chosen name already exists, a number will be appended automatically (e.g. Atlas1, Atlas2).\n",
-                MessageType.Info);
+                "If a file with the chosen name already exists, a number will be appended automatically (e.g. Atlas1, Atlas2).",
+                NiksonStyle);
 
-            parentObject = (GameObject)EditorGUILayout.ObjectField("Parent Object", parentObject, typeof(GameObject), true);
+            EditorGUILayout.Space();
 
-            EditorGUI.BeginChangeCheck();
+            ParentObject = (GameObject)EditorGUILayout.ObjectField("Parent Object", ParentObject, typeof(GameObject), true);
 
-            // Browse save path
             EditorGUILayout.BeginHorizontal();
-            savePath = EditorGUILayout.TextField("Save Path", savePath);
+            SavePath = EditorGUILayout.TextField("Save Path", SavePath);
             if (GUILayout.Button("Browse", GUILayout.Width(60)))
             {
                 string selected = EditorUtility.OpenFolderPanel("Select Save Folder", "Assets", "");
                 if (!string.IsNullOrEmpty(selected))
                 {
-                    if (selected.StartsWith(Application.dataPath))
-                        savePath = "Assets" + selected.Substring(Application.dataPath.Length);
-                    else
-                        Debug.LogWarning("Selected folder must be inside the project's Assets folder.");
+                    if (selected.StartsWith(Application.dataPath)) SavePath = "Assets" + selected.Substring(Application.dataPath.Length);
+                    else Debug.LogWarning("Selected folder must be inside the project's Assets folder.");
                 }
             }
             EditorGUILayout.EndHorizontal();
 
-            resizeTextures = EditorGUILayout.Toggle("Resize Textures", resizeTextures);
+            SharedAtlasName = EditorGUILayout.TextField("Atlas Name", SharedAtlasName);
 
-            GUI.enabled = resizeTextures;
-            targetTextureSize = EditorGUILayout.Vector2IntField("Target Size", targetTextureSize);
-            if (!resizeTextures) EditorGUILayout.HelpBox("Enable 'Resize Textures' to change texture size during atlas generation.", MessageType.Info);
-            else EditorGUILayout.HelpBox($"All textures will be resized to {targetTextureSize.x}x{targetTextureSize.y} before packing into atlas.", MessageType.Warning);
+            ResizeTextures = EditorGUILayout.Toggle("Resize Textures", ResizeTextures);
+
+            GUI.enabled = ResizeTextures;
+            TargetTextureSize = EditorGUILayout.Vector2IntField("Target Size", TargetTextureSize);
+            if (!ResizeTextures) EditorGUILayout.HelpBox("Enable 'Resize Textures' to change texture size during atlas generation.", MessageType.Info);
+            else EditorGUILayout.HelpBox($"All textures will be resized to {TargetTextureSize.x}x{TargetTextureSize.y} before packing into atlas.", MessageType.Warning);
             GUI.enabled = true;
 
             EditorGUILayout.Space();
 
-            applyToObjects = EditorGUILayout.Toggle("Apply to Objects", applyToObjects);
+            ApplyToObjects = EditorGUILayout.Toggle("Apply to Objects", ApplyToObjects);
             EditorGUILayout.HelpBox(
                 "Enabled: Automatically applies the generated atlas material and remapped meshes to child objects.\n" +
                 "Disabled: Only saves the atlas and remapped meshes as assets.",
                 MessageType.Info);
 
-            if (EditorGUI.EndChangeCheck())
-            {
-                EditorPrefs.SetString(PREF_SAVE_PATH, savePath);
-                EditorPrefs.SetBool(PREF_RESIZE, resizeTextures);
-                EditorPrefs.SetInt(PREF_TARGET_WIDTH, targetTextureSize.x);
-                EditorPrefs.SetInt(PREF_TARGET_HEIGHT, targetTextureSize.y);
-                EditorPrefs.SetBool(PREF_APPLY, applyToObjects);
-            }
-
             EditorGUILayout.Space();
 
-            GUI.enabled = parentObject != null;
+            GUI.enabled = ParentObject != null;
             if (GUILayout.Button("Map Meshes To Atlas", GUILayout.Height(30))) Generate();
             GUI.enabled = true;
         }
 
         public void Generate()
         {
-            MeshRenderer[] renderers = parentObject.GetComponentsInChildren<MeshRenderer>();
-            MeshFilter[] filters = parentObject.GetComponentsInChildren<MeshFilter>();
+            MeshRenderer[] renderers = ParentObject.GetComponentsInChildren<MeshRenderer>();
+            MeshFilter[] filters = ParentObject.GetComponentsInChildren<MeshFilter>();
 
             if (renderers.Length == 0)
             {
@@ -180,13 +148,12 @@ namespace Nikson
             MakeTexturesReadable(textures, originalImportSettings);
 
             // Resize textures if enabled
-            if (resizeTextures)
+            if (ResizeTextures)
             {
                 for (int i = 0; i < textures.Length; i++)
                 {
-                    textures[i] = ResizeTexture(textures[i], targetTextureSize[0], targetTextureSize[1]);
-                    // Update the texture reference in uniqueTextures
-                    uniqueTextures[keys[i]] = textures[i];
+                    textures[i] = ResizeTexture(textures[i], TargetTextureSize[0], TargetTextureSize[1]);
+                    uniqueTextures[keys[i]] = textures[i]; // Update the texture reference in uniqueTextures
                 }
             }
 
@@ -365,7 +332,7 @@ namespace Nikson
 
             atlasTexture.Apply();
 
-            string normalizedPath = savePath.Replace("\\", "/");
+            string normalizedPath = SavePath.Replace("\\", "/");
             if (!normalizedPath.EndsWith("/")) normalizedPath += "/";
 
             if (!Directory.Exists(normalizedPath))
@@ -374,7 +341,7 @@ namespace Nikson
                 AssetDatabase.Refresh();
             }
 
-            string atlasPath = GetUniquePath(normalizedPath, ATLAS_NAME, ".png");
+            string atlasPath = GetUniquePath(normalizedPath, SharedAtlasName, ".png");
             File.WriteAllBytes(atlasPath, atlasTexture.EncodeToPNG());
             AssetDatabase.Refresh();
 
@@ -382,18 +349,17 @@ namespace Nikson
             Material atlasMaterial = CreateAtlasMaterial(normalizedPath, savedAtlas);
 
             SaveMappedMeshes(normalizedPath, objectNames);
-            if (applyToObjects) ApplyMappedMeshesAndMaterial(filters, renderers, atlasMaterial, meshTextureKeys);
+            if (ApplyToObjects) ApplyMappedMeshesAndMaterial(filters, renderers, atlasMaterial, meshTextureKeys);
             RestoreTextureReadability(originalImportSettings);
 
-            string resizeInfo = resizeTextures ? $" (textures resized to {targetTextureSize.x}x{targetTextureSize.y})" : "";
+            string resizeInfo = ResizeTextures ? $" (textures resized to {TargetTextureSize.x}x{TargetTextureSize.y})" : "";
             Debug.Log($"Created Atlas: {atlasPath}   |   Size: {atlasWidth}x{atlasHeight}   |   From: {uniqueTextures.Count} unique textures and {renderers.Length} renderers{resizeInfo}");
-            EditorUtility.SetDirty(parentObject);
+            EditorUtility.SetDirty(ParentObject);
         }
 
         Texture2D ResizeTexture(Texture2D source, int targetWidth, int targetHeight)
         {
-            if (source.width == targetWidth && source.height == targetHeight)
-                return source;
+            if (source.width == targetWidth && source.height == targetHeight) return source;
 
             RenderTexture rt = RenderTexture.GetTemporary(targetWidth, targetHeight);
             rt.filterMode = FilterMode.Bilinear;
@@ -486,7 +452,7 @@ namespace Nikson
 
             foreach (var entry in uvMappings)
             {
-                Mesh newMesh = Object.Instantiate(entry.Key.mesh);
+                Mesh newMesh = Instantiate(entry.Key.mesh);
                 Vector2[] uvs = new Vector2[newMesh.vertexCount];
 
                 for (int i = 0; i < uvs.Length; i++)
@@ -507,7 +473,7 @@ namespace Nikson
 
         Material CreateAtlasMaterial(string folder, Texture2D atlasTexture)
         {
-            MeshRenderer firstRenderer = parentObject.GetComponentInChildren<MeshRenderer>();
+            MeshRenderer firstRenderer = ParentObject.GetComponentInChildren<MeshRenderer>();
             Material firstMaterial = firstRenderer.sharedMaterial;
 
             Material atlasMaterial = new Material(firstMaterial.shader);
@@ -516,7 +482,7 @@ namespace Nikson
             else if (atlasMaterial.HasProperty("_MainTex")) atlasMaterial.SetTexture("_MainTex", atlasTexture);
             else atlasMaterial.mainTexture = atlasTexture;
 
-            string materialPath = GetUniquePath(folder, ATLAS_NAME, ".mat");
+            string materialPath = GetUniquePath(folder, SharedAtlasName, ".mat");
             AssetDatabase.CreateAsset(atlasMaterial, materialPath);
             AssetDatabase.SaveAssets();
             return atlasMaterial;
@@ -524,7 +490,7 @@ namespace Nikson
 
         void ApplyMappedMeshesAndMaterial(MeshFilter[] filters, MeshRenderer[] renderers, Material atlasMaterial, List<MeshTextureKey> allKeys)
         {
-            string normalizedPath = savePath.Replace("\\", "/");
+            string normalizedPath = SavePath.Replace("\\", "/");
             if (!normalizedPath.EndsWith("/")) normalizedPath += "/";
 
             for (int i = 0; i < filters.Length; i++)
@@ -577,14 +543,6 @@ namespace Nikson
                     AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(data.importer), ImportAssetOptions.ForceUpdate);
                 }
             }
-        }
-
-        string GetUniquePath(string folder, string name, string ext)
-        {
-            string path = Path.Combine(folder, name + ext);
-            int index = 1;
-            while (File.Exists(path) || AssetDatabase.LoadAssetAtPath<Object>(path) != null) path = Path.Combine(folder, name + index++ + ext);
-            return path;
         }
 
         class TextureImportData

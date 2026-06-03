@@ -5,73 +5,46 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using static Nikson.OptimizationHub;
 
 namespace Nikson
 {
     public class MeshSimplifier : EditorWindow
     {
-        const string MESH_NAME = "SimplifiedMesh";
-        const string PREF_SAVE_PATH = "Nikson_MeshSimplifier_SavePath";
-        const string PREF_QUALITY = "Nikson_MeshSimplifier_Quality";
-        const string PREF_APPLY_TO_MESH = "Nikson_MeshSimplifier_ApplyToMesh";
-
-        GameObject parentObject;
-        string savePath;
-        int qualityPercent;
-        bool applyToMesh;
-
         GameObject targetMesh;
         Mesh optimizedMesh;
         Mesh originalMesh; // Clone used for optimization
         Mesh originalSharedMesh; // Reference to the original shared mesh
         GameObject lastTarget;
 
-        [MenuItem("Tools/Nikson/Optimization/3. Mesh Simplifier")]
-        public static void ShowWindow() => GetWindow<MeshSimplifier>("Mesh Simplifier");
-
-        void OnEnable()
-        {
-            savePath = EditorPrefs.GetString(PREF_SAVE_PATH, "Assets/Nikson/Optimization/Generated/");
-            qualityPercent = EditorPrefs.GetInt(PREF_QUALITY, 100);
-            applyToMesh = EditorPrefs.GetBool(PREF_APPLY_TO_MESH, false);
-        }
+        public void DrawGUI() => OnGUI();
 
         void OnGUI()
         {
-            EditorGUILayout.HelpBox(
-                "\nSelect a GameObject containing a mesh, adjust the Quality slider, and click \"Preview\" to see the result in the scene before saving.\n\n" +
-                "Click \"Generate\" to save the simplified mesh as an asset. If a file with the chosen name already exists, a number will be appended automatically (e.g. SimplifiedMesh1, SimplifiedMesh2).\n",
-                MessageType.Info);
+            EditorGUILayout.LabelField(
+                "Select a GameObject containing a mesh, adjust the Quality slider, and click \"Preview\" to see the result in the scene before saving.\n\n" +
+                "Click \"Generate\" to save the simplified mesh as an asset. If a file with the chosen name already exists, a number will be appended automatically (e.g. SimplifiedMesh1, SimplifiedMesh2).",
+                NiksonStyle);
 
-            parentObject = (GameObject)EditorGUILayout.ObjectField("Parent Object", parentObject, typeof(GameObject), true);
+            EditorGUILayout.Space();
 
-            EditorGUI.BeginChangeCheck();
+            ParentObject = (GameObject)EditorGUILayout.ObjectField("Parent Object", ParentObject, typeof(GameObject), true);
 
-            // Browse save path
             EditorGUILayout.BeginHorizontal();
-            savePath = EditorGUILayout.TextField("Save Path", savePath);
+            SavePath = EditorGUILayout.TextField("Save Path", SavePath);
             if (GUILayout.Button("Browse", GUILayout.Width(60)))
             {
                 string selected = EditorUtility.OpenFolderPanel("Select Save Folder", "Assets", "");
                 if (!string.IsNullOrEmpty(selected))
                 {
-                    if (selected.StartsWith(Application.dataPath))
-                        savePath = "Assets" + selected.Substring(Application.dataPath.Length);
-                    else
-                        Debug.LogWarning("Selected folder must be inside the project's Assets folder.");
+                    if (selected.StartsWith(Application.dataPath)) SavePath = "Assets" + selected.Substring(Application.dataPath.Length);
+                    else Debug.LogWarning("Selected folder must be inside the project's Assets folder.");
                 }
             }
             EditorGUILayout.EndHorizontal();
 
-            qualityPercent = EditorGUILayout.IntSlider("Quality Percent", qualityPercent, 1, 100);
-            applyToMesh = EditorGUILayout.Toggle("Apply to Mesh", applyToMesh);
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                EditorPrefs.SetString(PREF_SAVE_PATH, savePath);
-                EditorPrefs.SetInt(PREF_QUALITY, qualityPercent);
-                EditorPrefs.SetBool(PREF_APPLY_TO_MESH, applyToMesh);
-            }
+            MeshQuality = EditorGUILayout.IntSlider("Quality Percent", MeshQuality, 1, 100);
+            ApplyToMesh = EditorGUILayout.Toggle("Apply to Mesh", ApplyToMesh);
 
             EditorGUILayout.HelpBox(
                 "Enabled: Simplified mesh replaces the original in the scene.\n" +
@@ -80,7 +53,7 @@ namespace Nikson
 
             EditorGUILayout.Space();
 
-            GUI.enabled = parentObject != null;
+            GUI.enabled = ParentObject != null;
             if (GUILayout.Button("Preview", GUILayout.Height(30))) Preview();
             if (GUILayout.Button("Generate", GUILayout.Height(30))) Generate();
             GUI.enabled = true;
@@ -91,8 +64,8 @@ namespace Nikson
             // Find target mesh in children
             if (!targetMesh)
             {
-                var meshFilter = parentObject.GetComponentInChildren<MeshFilter>();
-                var skinnedMeshRenderer = parentObject.GetComponentInChildren<SkinnedMeshRenderer>();
+                var meshFilter = ParentObject.GetComponentInChildren<MeshFilter>();
+                var skinnedMeshRenderer = ParentObject.GetComponentInChildren<SkinnedMeshRenderer>();
                 if (meshFilter != null) targetMesh = meshFilter.gameObject;
                 else if (skinnedMeshRenderer != null) targetMesh = skinnedMeshRenderer.gameObject;
                 else
@@ -110,7 +83,7 @@ namespace Nikson
                 originalSharedMesh = sharedMesh;
                 originalMesh = Instantiate(originalSharedMesh);
             }
-            float quality = Mathf.Clamp01(qualityPercent / 100f);
+            float quality = Mathf.Clamp01(MeshQuality / 100f);
             var meshSimplifier = new UnityMeshSimplifier();
             meshSimplifier.Initialize(originalMesh);
             meshSimplifier.SimplifyMesh(quality);
@@ -132,13 +105,13 @@ namespace Nikson
             }
 
             // Simplify the mesh
-            float quality = Mathf.Clamp01(qualityPercent / 100f);
+            float quality = Mathf.Clamp01(MeshQuality / 100f);
             var meshSimplifier = new UnityMeshSimplifier();
             meshSimplifier.Initialize(originalMesh);
             meshSimplifier.SimplifyMesh(quality);
             Mesh meshToSave = meshSimplifier.ToMesh();
 
-            string normalizedPath = savePath.Replace("\\", "/");
+            string normalizedPath = SavePath.Replace("\\", "/");
             if (!normalizedPath.EndsWith("/")) normalizedPath += "/";
 
             if (!Directory.Exists(normalizedPath))
@@ -147,32 +120,24 @@ namespace Nikson
                 AssetDatabase.Refresh();
             }
 
-            string meshPath = GetUniquePath(normalizedPath, MESH_NAME, ".asset");
+            string meshPath = GetUniquePath(normalizedPath, SimplifiedMeshName, ".asset");
             meshToSave.name = Path.GetFileNameWithoutExtension(meshPath);
 
             AssetDatabase.CreateAsset(meshToSave, meshPath);
             AssetDatabase.SaveAssets();
-            Debug.Log($"Saved Mesh: {meshPath} (with {qualityPercent}% quality){(applyToMesh ? $"   |   Applied simplified mesh to {targetMesh.name}" : string.Empty)}");
+            Debug.Log($"Saved Mesh: {meshPath} (with {MeshQuality}% quality){(ApplyToMesh ? $"   |   Applied simplified mesh to {targetMesh.name}" : string.Empty)}");
 
             // Apply or reset based on user choice
-            if (applyToMesh) SetSharedMesh(targetMesh, meshToSave);
+            if (ApplyToMesh) SetSharedMesh(targetMesh, meshToSave);
             else if (optimizedMesh != null && originalSharedMesh != null) SetSharedMesh(targetMesh, originalSharedMesh);
 
-            EditorUtility.SetDirty(parentObject);
-            parentObject = null;
+            EditorUtility.SetDirty(ParentObject);
+            ParentObject = null;
             targetMesh = null;
             lastTarget = null;
             originalSharedMesh = null;
             originalMesh = null;
             optimizedMesh = null;
-        }
-
-        string GetUniquePath(string folder, string name, string ext)
-        {
-            string path = Path.Combine(folder, name + ext);
-            int index = 1;
-            while (File.Exists(path) || AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) != null) path = Path.Combine(folder, name + index++ + ext);
-            return path;
         }
 
         bool ValidateTarget()
@@ -215,8 +180,8 @@ namespace Nikson
         public BlendShapeFrame[] Frames;
         public BlendShape(string shapeName, BlendShapeFrame[] frames)
         {
-            this.ShapeName = shapeName;
-            this.Frames = frames;
+            ShapeName = shapeName;
+            Frames = frames;
         }
     }
 
@@ -228,10 +193,10 @@ namespace Nikson
         public Vector3[] DeltaTangents;
         public BlendShapeFrame(float frameWeight, Vector3[] deltaVertices, Vector3[] deltaNormals, Vector3[] deltaTangents)
         {
-            this.FrameWeight = frameWeight;
-            this.DeltaVertices = deltaVertices;
-            this.DeltaNormals = deltaNormals;
-            this.DeltaTangents = deltaTangents;
+            FrameWeight = frameWeight;
+            DeltaVertices = deltaVertices;
+            DeltaNormals = deltaNormals;
+            DeltaTangents = deltaTangents;
         }
     }
 
@@ -718,8 +683,7 @@ namespace Nikson
                 for (int i = 0; i < 4; i++)
                 {
                     var vertUV = vertUV2D[i];
-                    if (vertUV != null)
-                        vertUV[dst] = (vertUV[i0] * barycentricCoord.x) + (vertUV[i1] * barycentricCoord.y) + (vertUV[i2] * barycentricCoord.z);
+                    if (vertUV != null) vertUV[dst] = (vertUV[i0] * barycentricCoord.x) + (vertUV[i1] * barycentricCoord.y) + (vertUV[i2] * barycentricCoord.z);
                 }
             }
             if (vertUV3D != null)
@@ -727,8 +691,7 @@ namespace Nikson
                 for (int i = 0; i < 4; i++)
                 {
                     var vertUV = vertUV3D[i];
-                    if (vertUV != null)
-                        vertUV[dst] = (vertUV[i0] * barycentricCoord.x) + (vertUV[i1] * barycentricCoord.y) + (vertUV[i2] * barycentricCoord.z);
+                    if (vertUV != null) vertUV[dst] = (vertUV[i0] * barycentricCoord.x) + (vertUV[i1] * barycentricCoord.y) + (vertUV[i2] * barycentricCoord.z);
                 }
             }
             if (vertUV4D != null)
@@ -736,8 +699,7 @@ namespace Nikson
                 for (int i = 0; i < 4; i++)
                 {
                     var vertUV = vertUV4D[i];
-                    if (vertUV != null)
-                        vertUV[dst] = (vertUV[i0] * barycentricCoord.x) + (vertUV[i1] * barycentricCoord.y) + (vertUV[i2] * barycentricCoord.z);
+                    if (vertUV != null) vertUV[dst] = (vertUV[i0] * barycentricCoord.x) + (vertUV[i1] * barycentricCoord.y) + (vertUV[i2] * barycentricCoord.z);
                 }
             }
             if (vertColors != null) vertColors[dst] = (vertColors[i0] * barycentricCoord.x) + (vertColors[i1] * barycentricCoord.y) + (vertColors[i2] * barycentricCoord.z);
@@ -753,20 +715,17 @@ namespace Nikson
             if (vertUV2D != null)
             {
                 var vertUV = vertUV2D[channel];
-                if (vertUV != null)
-                    return vertUV[indexA] == vertUV[indexB];
+                if (vertUV != null) return vertUV[indexA] == vertUV[indexB];
             }
             if (vertUV3D != null)
             {
                 var vertUV = vertUV3D[channel];
-                if (vertUV != null)
-                    return vertUV[indexA] == vertUV[indexB];
+                if (vertUV != null) return vertUV[indexA] == vertUV[indexB];
             }
             if (vertUV4D != null)
             {
                 var vertUV = vertUV4D[channel];
-                if (vertUV != null)
-                    return vertUV[indexA] == vertUV[indexB];
+                if (vertUV != null) return vertUV[indexA] == vertUV[indexB];
             }
             return false;
         }
@@ -814,10 +773,7 @@ namespace Nikson
                     UpdateTriangles(i0, ia0, ref vertices[i0], deleted0, ref deletedTris);
                     UpdateTriangles(i0, ia0, ref vertices[i1], deleted1, ref deletedTris);
                     int tcount = refs.Length - tstart;
-                    if (tcount <= vertices[i0].tcount)
-                    {
-                        if (tcount > 0) Array.Copy(refs.Data, tstart, refs.Data, vertices[i0].tstart, tcount);
-                    }
+                    if (tcount <= vertices[i0].tcount) if (tcount > 0) Array.Copy(refs.Data, tstart, refs.Data, vertices[i0].tstart, tcount);
                     else vertices[i0].tstart = tstart;
                     vertices[i0].tcount = tcount;
                     break;
@@ -836,13 +792,11 @@ namespace Nikson
             {
                 int dst = 0;
                 for (int i = 0; i < triangleCount; i++)
-                {
                     if (!triangles[i].deleted)
                     {
                         if (dst != i) triangles[dst] = triangles[i];
                         dst++;
                     }
-                }
                 this.triangles.Resize(dst);
                 triangles = this.triangles.Data;
                 triangleCount = dst;
@@ -912,14 +866,12 @@ namespace Nikson
                     int borderIndexCount = 0;
                     double borderAreaWidth = borderMaxX - borderMinX;
                     for (int i = 0; i < vertexCount; i++)
-                    {
                         if (vertices[i].borderEdge)
                         {
                             int vertexHash = (int)(((((vertices[i].p.x - borderMinX) / borderAreaWidth) * 2.0) - 1.0) * int.MaxValue);
                             borderVertices[borderIndexCount] = new BorderVertex(i, vertexHash);
                             ++borderIndexCount;
                         }
-                    }
                     Array.Sort(borderVertices, 0, borderIndexCount, BorderVertexComparer.instance);
                     double vertexLinkDistance = Math.Sqrt(vertexLinkDistanceSqr);
                     int hashMaxDistance = Math.Max((int)((vertexLinkDistance / borderAreaWidth) * int.MaxValue), 1);
@@ -1127,8 +1079,7 @@ namespace Nikson
                             for (int j = 0; j < 4; j++)
                             {
                                 var vertUV = vertUV2D[j];
-                                if (vertUV != null)
-                                    vertUV[dst] = vertUV[i];
+                                if (vertUV != null) vertUV[dst] = vertUV[i];
                             }
                         }
                         if (vertUV3D != null)
@@ -1136,8 +1087,7 @@ namespace Nikson
                             for (int j = 0; j < 4; j++)
                             {
                                 var vertUV = vertUV3D[j];
-                                if (vertUV != null)
-                                    vertUV[dst] = vertUV[i];
+                                if (vertUV != null) vertUV[dst] = vertUV[i];
                             }
                         }
                         if (vertUV4D != null)
@@ -1145,17 +1095,14 @@ namespace Nikson
                             for (int j = 0; j < 4; j++)
                             {
                                 var vertUV = vertUV4D[j];
-                                if (vertUV != null)
-                                    vertUV[dst] = vertUV[i];
+                                if (vertUV != null) vertUV[dst] = vertUV[i];
                             }
                         }
                         if (vertColors != null) vertColors[dst] = vertColors[i];
                         if (vertBoneWeights != null) vertBoneWeights[dst] = vertBoneWeights[i];
                         if (blendShapes != null)
-                        {
                             for (int shapeIndex = 0; shapeIndex < this.blendShapes.Length; shapeIndex++)
                                 blendShapes[shapeIndex].MoveVertexElement(dst, i);
-                        }
                     }
                     ++dst;
                 }
@@ -2015,23 +1962,17 @@ namespace Nikson
             if (colors != null && colors.Length > 0) newMesh.colors = colors;
             if (boneWeights != null && boneWeights.Length > 0) newMesh.boneWeights = boneWeights;
             if (uvs2D != null)
-            {
                 for (int uvChannel = 0; uvChannel < uvs2D.Length; uvChannel++)
                     if (uvs2D[uvChannel] != null && uvs2D[uvChannel].Count > 0)
                         newMesh.SetUVs(uvChannel, uvs2D[uvChannel]);
-            }
             if (uvs3D != null)
-            {
                 for (int uvChannel = 0; uvChannel < uvs3D.Length; uvChannel++)
                     if (uvs3D[uvChannel] != null && uvs3D[uvChannel].Count > 0)
                         newMesh.SetUVs(uvChannel, uvs3D[uvChannel]);
-            }
             if (uvs4D != null)
-            {
                 for (int uvChannel = 0; uvChannel < uvs4D.Length; uvChannel++)
                     if (uvs4D[uvChannel] != null && uvs4D[uvChannel].Count > 0)
                         newMesh.SetUVs(uvChannel, uvs4D[uvChannel]);
-            }
             if (blendShapes != null) ApplyMeshBlendShapes(newMesh, blendShapes);
             if (bindposes != null && bindposes.Length > 0) newMesh.bindposes = bindposes;
             for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)

@@ -19,18 +19,10 @@ namespace Nikson
             else Debug.LogWarning("[EditorHotkeys] Could not hook globalEventHandler.");
         }
 
-        static bool backquoteHeld;
-
         static void OnGlobalEvent()
         {
             var e = Event.current;
             if (e == null) return;
-
-            if (e.keyCode == KeyCode.BackQuote)
-            {
-                if (e.type == EventType.KeyDown) backquoteHeld = true;
-                else if (e.type == EventType.KeyUp) backquoteHeld = false;
-            }
 
             // Shift + LMB — multi-select under cursor (play mode)
             if (e.shift && e.type == EventType.MouseDown && e.button == 0 && EditorApplication.isPlaying)
@@ -54,15 +46,15 @@ namespace Nikson
 
             if (!e.shift) return;
 
-            if (e.keyCode == KeyCode.S && backquoteHeld) { EditorMethods.SavePlayModeState(); e.Use(); return; }
+            if (e.keyCode == KeyCode.S && e.control) { EditorMethods.SavePlayModeState(); e.Use(); return; }
             if (e.keyCode == KeyCode.R) { EditorMethods.ResetTransform(); e.Use(); return; }
             if (e.keyCode == KeyCode.T) { EditorMethods.ToggleActive(); e.Use(); return; }
             if (e.keyCode == KeyCode.G) { EditorMethods.SnapToGround(); e.Use(); return; }
             if (e.keyCode == KeyCode.C) { EditorMethods.ClearConsole(); e.Use(); return; }
 
-            // Shift + Arrow Keys — move relative to camera | LShift + ` + Up/Down — move up/down
-            if (e.keyCode == KeyCode.UpArrow) { EditorMethods.MoveWithArrow(KeyCode.UpArrow, backquoteHeld); e.Use(); return; }
-            if (e.keyCode == KeyCode.DownArrow) { EditorMethods.MoveWithArrow(KeyCode.DownArrow, backquoteHeld); e.Use(); return; }
+            // Shift + Arrow Keys — move relative to camera | Shift + Control + Up/Down — move up/down
+            if (e.keyCode == KeyCode.UpArrow) { EditorMethods.MoveWithArrow(KeyCode.UpArrow, e.control); e.Use(); return; }
+            if (e.keyCode == KeyCode.DownArrow) { EditorMethods.MoveWithArrow(KeyCode.DownArrow, e.control); e.Use(); return; }
             if (e.keyCode == KeyCode.RightArrow) { EditorMethods.MoveWithArrow(KeyCode.RightArrow, false); e.Use(); return; }
             if (e.keyCode == KeyCode.LeftArrow) { EditorMethods.MoveWithArrow(KeyCode.LeftArrow, false); e.Use(); return; }
 
