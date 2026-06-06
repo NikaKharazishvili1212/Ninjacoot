@@ -19414,7 +19414,6 @@ GameObject:
   - component: {fileID: 5982824243757816023}
   - component: {fileID: 5982824243757816022}
   - component: {fileID: 5318593134009601000}
-  - component: {fileID: 5982824243757816024}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -20793,36 +20792,6 @@ CapsuleCollider:
   m_Height: 1.75
   m_Direction: 1
   m_Center: {x: 0, y: 0.88, z: 0}
---- !u!205 &5982824243757816024
-LODGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3890450540377269208}
-  serializedVersion: 2
-  m_LocalReferencePoint: {x: -0.00024935603, y: 0.87478507, z: 0.013605088}
-  m_Size: 1.8697274
-  m_FadeMode: 0
-  m_AnimateCrossFading: 0
-  m_LastLODIsBillboard: 0
-  m_LODs:
-  - screenRelativeHeight: 0.6
-    fadeTransitionWidth: 0
-    renderers: []
-  - screenRelativeHeight: 0.3
-    fadeTransitionWidth: 0
-    renderers:
-    - renderer: {fileID: 0}
-  - screenRelativeHeight: 0.15
-    fadeTransitionWidth: 0
-    renderers:
-    - renderer: {fileID: 0}
-  - screenRelativeHeight: 0.05
-    fadeTransitionWidth: 0
-    renderers:
-    - renderer: {fileID: 0}
-  m_Enabled: 1
 --- !u!1 &5996402209842663399
 GameObject:
   m_ObjectHideFlags: 0
@@ -20947,7 +20916,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &6262629106520294875
 MonoBehaviour:
   m_ObjectHideFlags: 0
