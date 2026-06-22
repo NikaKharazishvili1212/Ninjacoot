@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Nikspector;
+using Nikson;
 using UnityEngine.AddressableAssets;
 using static GameConstants;
 

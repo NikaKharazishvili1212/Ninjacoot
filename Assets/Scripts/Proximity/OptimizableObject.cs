@@ -4,7 +4,7 @@ public class OptimizableObject : MonoBehaviour
 {
     [SerializeField] Component[] components;
 
-    void Awake() => Toggle(false);
+    // void Awake() => Toggle(false);
 
     public void Toggle(bool state)
     {

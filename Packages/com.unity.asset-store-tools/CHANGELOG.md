@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this package will be documented in this file.
 
+## [12.0.5] - 2026-06-08
+
+## Validator changes
+- Test descriptions now support rich text
+- Added static variable check validation test
+- Added SRP compatability validation test
+
 ## [12.0.4] - 2026-05-22
 
 ## General changes

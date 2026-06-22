@@ -1,5 +1,4 @@
 using UnityEngine;
-using static Utils;
 using static GameConstants;
 
 public class ShurikenProjectile : MonoBehaviour
@@ -10,14 +9,15 @@ public class ShurikenProjectile : MonoBehaviour
     Transform target;
     bool canRotate, alreadyHit;
     Vector3 initialPosition, movementDirection;
-    TimerHandle lifespanHandle;
+    float lifeSpan;
 
     void Update() => Move();
 
     // Activates random Shuriken model - if it's Kunai, it won't have a rotation animation (Called by Player)
     public void Shoot(Transform target, Transform player)
     {
-        lifespanHandle?.CancelInvoke2(); // Cancel any leftover lifespan timer from previous use
+        if (lifeSpan <= 0) { gameObject.SetActive(false); return; }
+        lifeSpan = ShurikenLifeSpan;
         alreadyHit = false;
         int random = Random.Range(0, GM.ShurikenModels.Length);
         for (int i = 0; i < shurikenTypeToActivate.Length; i++) shurikenTypeToActivate[i].SetActive(i == random);
@@ -31,7 +31,6 @@ public class ShurikenProjectile : MonoBehaviour
         initialPosition = transform.position; // Save starting position to calculate how far it moved
 
         gameObject.SetActive(true);
-        lifespanHandle = this.Invoke2(ShurikenLifeSpan, () => gameObject.SetActive(false));
     }
 
     // If having target, move towards it, otherwise just move forward (unless it touches anything)

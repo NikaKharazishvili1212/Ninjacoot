@@ -15,13 +15,11 @@ namespace Nikson
         {
             public Mesh mesh;
             public Texture2D texture;
-            public int instanceId;
 
-            public MeshTextureKey(Mesh m, Texture2D t, int id)
+            public MeshTextureKey(Mesh m, Texture2D t)
             {
                 mesh = m;
                 texture = t;
-                instanceId = id;
             }
 
             public override bool Equals(object obj)
@@ -33,10 +31,9 @@ namespace Nikson
             public override int GetHashCode() => (mesh?.GetHashCode() ?? 0) ^ (texture?.GetHashCode() ?? 0);
         }
 
-        public void DrawGUI() => OnGUI();
-
-        void OnGUI()
+        public void OnGUI()
         {
+            DrawIcon();
             EditorGUILayout.LabelField(
                 "Remaps all meshes under the selected parent GameObject to a shared texture atlas. " +
                 "Each mesh keeps its own identity — UVs are adjusted per-object rather than merging into one mesh.\n\n" +
@@ -59,6 +56,7 @@ namespace Nikson
             GUI.enabled = Selection.gameObjects.Length == 1;
             if (CenteredButton("Generate")) Generate();
             GUI.enabled = true;
+            EditorGUILayout.Space();
         }
 
         public void Generate()
@@ -92,7 +90,7 @@ namespace Nikson
                 Texture2D mainTex = mat.mainTexture as Texture2D;
                 if (mainTex == null) continue;
 
-                MeshTextureKey key = new MeshTextureKey(mesh, mainTex, i);
+                MeshTextureKey key = new MeshTextureKey(mesh, mainTex);
                 meshTextureKeys.Add(key);
 
                 if (!uniqueTextures.ContainsKey(key))
@@ -258,12 +256,6 @@ namespace Nikson
                     }
                 }
             }
-        }
-
-        class TextureImportData
-        {
-            public TextureImporter importer;
-            public bool wasReadable;
         }
     }
 }
