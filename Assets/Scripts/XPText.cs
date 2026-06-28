@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using Nikson;
 using static Utils;
 using static GameConstants;
 
@@ -13,7 +14,7 @@ public class XPText : MonoBehaviour
         transform.position = target.position + Vector3.up * 2;
         xpText.text = "XP +" + xpAmount.ToString();
         gameObject.SetActive(true);
-        this.Invoke2(XpTextLifespan, () => gameObject.SetActive(false));
+        this.Wait(XpTextLifespan, () => gameObject.SetActive(false));
     }
 
     void Update()

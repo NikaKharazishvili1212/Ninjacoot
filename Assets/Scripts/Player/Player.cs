@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Nikson;
 using static Utils;
 using static GameConstants;
 
@@ -108,7 +109,7 @@ public partial class Player : MonoBehaviour
             currentXP = currentXP - maxXP;
             maxXP = (int)(maxXP * 1.5 + level * 20);
             level += 1;
-            this.Invoke2(0.5f, () => { GM.PlaySound(audioSource, SoundType.LevelUp); GM.EventText(2); });
+            this.Wait(0.5f, () => { GM.PlaySound(audioSource, SoundType.LevelUp); GM.EventText(2); });
         }
 
         UpdateHud(LevelText: true, XpText: true, XpFill: true);
@@ -132,12 +133,12 @@ public partial class Player : MonoBehaviour
             GM.PlaySound(audioSource, SoundType.PlayerDeath1, SoundType.PlayerDeath2);
             GM.PlaySound(audioSource, SoundType.PlayerFall);
             GM.EventText(1);
-            this.Invoke2(PlayerReviveDelay, () =>
+            this.Wait(PlayerReviveDelay, () =>
             {
                 animator.Play(ReviveHash);
                 transform.position = respawnPosition;
                 // A slight delay of making Player alive so revive animation plays fully without interfering
-                this.Invoke2(2, () =>
+                this.Wait(2, () =>
                 {
                     IsAlive = true;
                     currentHealth = maxHealth;

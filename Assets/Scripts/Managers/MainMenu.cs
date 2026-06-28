@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Nikson;
 using static Utils;
 
 public class MainMenu : MonoBehaviour
@@ -117,7 +118,7 @@ public class MainMenu : MonoBehaviour
                     SelectNext("difficulties");
                     menu = 11;
                     newGameMenuAnim.Play("MenuDown2");
-                    this.Invoke2(0.2f, () => difficultyMenu.SetActive(true));
+                    this.Wait(0.2f, () => difficultyMenu.SetActive(true));
                 }
                 else audioSource.PlayOneShot(cancelSound);
             }

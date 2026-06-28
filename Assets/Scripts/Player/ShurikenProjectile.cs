@@ -16,7 +16,6 @@ public class ShurikenProjectile : MonoBehaviour
     // Activates random Shuriken model - if it's Kunai, it won't have a rotation animation (Called by Player)
     public void Shoot(Transform target, Transform player)
     {
-        if (lifeSpan <= 0) { gameObject.SetActive(false); return; }
         lifeSpan = ShurikenLifeSpan;
         alreadyHit = false;
         int random = Random.Range(0, GM.ShurikenModels.Length);
@@ -36,6 +35,7 @@ public class ShurikenProjectile : MonoBehaviour
     // If having target, move towards it, otherwise just move forward (unless it touches anything)
     void Move()
     {
+        if (lifeSpan <= 0) { gameObject.SetActive(false); return; }
         if (canRotate) transform.Rotate(0, ShurikenRotationSpeed, 0); // Rotate if Shuriken model isn't Kunai
 
         if (target)

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Nikson;
 using static Utils;
 using static GameConstants;
 
@@ -57,7 +58,7 @@ public partial class Player : MonoBehaviour
         isSpinning = true;
         animator.Play(Chance(50) ? Spin1Hash : Spin2Hash);
         GM.PlaySound(audioSource, SoundType.PlayerSpin);
-        this.Invoke2(spinTime, () => { isSpinning = false; if (IsAlive) animator.Play(IdleHash); });
+        this.Wait(spinTime, () => { isSpinning = false; if (IsAlive) animator.Play(IdleHash); });
     }
 
     // Shoots Shuriken towards nearest enemy in range. Has cooldown
@@ -70,7 +71,7 @@ public partial class Player : MonoBehaviour
         animator.Play(ThrowHash);
         GM.PlaySound(audioSource, SoundType.ShurikenShoot);
         FindAndShootNearestEnemy();
-        this.Invoke2(0.6f, () => isThrowing = false);
+        this.Wait(0.6f, () => isThrowing = false);
     }
 
     void Jump(UnityEngine.InputSystem.InputAction.CallbackContext _)

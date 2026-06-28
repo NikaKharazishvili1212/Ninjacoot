@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using Nikson;
 using static Utils;
 using static GameConstants;
 
@@ -76,8 +77,8 @@ public class Enemy : MonoBehaviour
                     isGoingBack = true;
                     hasTarget = false;
                     agent.speed = GoingBackSpeed;
-                    this.Invoke2(0.1f, () => agent.SetDestination(startingPosition));
-                    this.Invoke2(3f, () => { if (isGoingBack) isGoingBack = false; });  // We need "isGoingBack" check to avoid bug when Player kills the NPC while it's going back
+                    this.Wait(0.1f, () => agent.SetDestination(startingPosition));
+                    this.Wait(3f, () => { if (isGoingBack) isGoingBack = false; });  // We need "isGoingBack" check to avoid bug when Player kills the NPC while it's going back
                 }
                 // Attack the Player if he is in NPC's "attackRange" and the NPC doesn't already do the attack animation
                 else if (Vector3.Distance(transform.position, Player.transform.position) <= attackRange && !isDoingAttackAnimation)
@@ -86,7 +87,7 @@ public class Enemy : MonoBehaviour
                     {
                         isDoingAttackAnimation = true;
                         animator.Play(Chance(50) ? Attack1Hash : Attack2Hash); // Does random of 2 attack animations for: Swordsman, Archer, Mage
-                        this.Invoke2(attackDelay, () => isDoingAttackAnimation = false);
+                        this.Wait(attackDelay, () => isDoingAttackAnimation = false);
                     }
                 }
                 // Else chase the Target
@@ -115,7 +116,7 @@ public class Enemy : MonoBehaviour
         animator.Play(diedByPlayer ? Death1Hash : Death2Hash);
         if (diedByPlayer) GM.PlaySound(audioSource, SoundType.PlayerHitEnemy1, SoundType.PlayerHitEnemy2, SoundType.PlayerHitEnemy3, SoundType.PlayerHitEnemy4, SoundType.PlayerHitEnemy5, SoundType.PlayerHitEnemy6);
         else GM.PlaySound(audioSource, SoundType.ShurikenHitEnemy);
-        this.Invoke2(0.25f, () => GM.PlaySound(audioSource, SoundType.SkeletonDeath1, SoundType.SkeletonDeath2, SoundType.SkeletonDeath3, SoundType.SkeletonDeath4, SoundType.SkeletonDeath5));
+        this.Wait(0.25f, () => GM.PlaySound(audioSource, SoundType.SkeletonDeath1, SoundType.SkeletonDeath2, SoundType.SkeletonDeath3, SoundType.SkeletonDeath4, SoundType.SkeletonDeath5));
 
         if (!isKillenOnce) { isKillenOnce = true; GM.AddKill(); }
 
@@ -123,14 +124,14 @@ public class Enemy : MonoBehaviour
         PoolComponent(GM.XpTexts)?.ShowXPText(transform, randomXp);
         Player.GainXP(randomXp);
 
-        this.Invoke2(EnemyDeathDeactivateDelay, () => gameObject.SetActive(false));
-        this.Invoke2(EnemyRespawnInterval, () =>
+        this.Wait(EnemyDeathDeactivateDelay, () => gameObject.SetActive(false));
+        this.Wait(EnemyRespawnInterval, () =>
         {
             gameObject.SetActive(true);
             collider.enabled = true;
             agent.Warp(startingPosition);
             animator.Play(RespawnHash);
-            this.Invoke2(1, () => IsAlive = true);
+            this.Wait(1, () => IsAlive = true);
         });
     }
 

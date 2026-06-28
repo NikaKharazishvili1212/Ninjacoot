@@ -33,14 +33,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] AnimationClip hudOnAnimation, hudOffAnimation;
     bool isHudOn = true, canToggleHud = true;
 
-    [Button]
+    // [Button]
     void DeleteAllPlayerPrefs()
     {
         PlayerPrefs.DeleteAll();
         foreach (Transform coin in coinsParent.transform) coin.gameObject.SetActive(true); // Activate so they won't be saved OnApplicationQuit
     }
 
-    [Button]
+    // [Button]
     void SetUpScene()
     {
         Camera = UnityEngine.Camera.main.transform;
@@ -77,7 +77,7 @@ public class GameManager : MonoBehaviour
         isHudOn = !isHudOn;
         hudAnimator.Play(isHudOn ? hudOnAnimation : hudOffAnimation);
         canToggleHud = false;
-        this.Invoke2(ToggleHudCD, () => canToggleHud = true);
+        this.Wait(ToggleHudCD, () => canToggleHud = true);
     }
 
     // Update coins' hud and playerprefs, deactivate coin
@@ -106,7 +106,7 @@ public class GameManager : MonoBehaviour
     {
         eventText.text = Event == 1 ? "You are dead" : Event == 2 ? "Level Up!" : Event == 3 ? "You won!" : null;
         eventText.color = Event == 1 ? Color.red : Event == 2 ? Color.green : Event == 3 ? Color.green : Color.white;
-        this.Invoke2(3, () => eventText.text = null);
+        this.Wait(3, () => eventText.text = null);
     }
 
     void LoadData()

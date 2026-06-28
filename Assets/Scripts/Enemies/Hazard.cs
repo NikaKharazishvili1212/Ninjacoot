@@ -1,4 +1,5 @@
 using UnityEngine;
+using Nikson;
 using static GameConstants;
 
 /// <summary>Damages Player on touch; has cooldown.</summary>
@@ -12,6 +13,6 @@ public class Hazard : MonoBehaviour
         if (damageOnCd || !other.gameObject.CompareTag(TagPlayer)) return;
         GM.Player.TakeDamage();
         damageOnCd = true;
-        this.Invoke2(HazardDamageCooldown, () => damageOnCd = false);
+        this.Wait(HazardDamageCooldown, () => damageOnCd = false);
     }
 }
